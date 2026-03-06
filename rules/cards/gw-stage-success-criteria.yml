@@ -60,7 +60,7 @@
 - id: gw-librpa-success-605
   scene: Judge whether LibRPA finished successfully for GW
   symptom: Need a generic success signal for the long LibRPA stage
-  root_cause: LibRPA completion is best judged from the rank-0 output and final GW products, not from transient mid-run timer lines
+  root_cause: LibRPA completion is best judged from the rank-0 output and final GW products
   fix:
     - Check that `librpa_para_nprocs_*_myid_0.out` exists
     - Check that the rank-0 output contains `Timer stop:  total.`
@@ -70,19 +70,34 @@
     - Confirm final GW band files are non-empty
   applies_to:
     mode: gw
-    stage: librpa
+    stage: librpa_success
 
 - id: gw-librpa-running-606
-  scene: Judge whether LibRPA is still progressing rather than stalled or finished
+  scene: Judge whether LibRPA is still running normally
   symptom: LibRPA is the only stage in the standard GW chain that usually needs explicit running-state checks
   root_cause: `pyatb` and `preprocess` are usually short, while LibRPA is long-running enough to require progress-aware monitoring
   fix:
     - Check that `librpa_para_nprocs_*_myid_0.out` exists
-    - If `Timer stop:  total.` is absent, inspect whether the file is still growing or has recent timestamp updates
-    - Treat repeated stage markers such as `Timer start:` / `Timer stop:` and GW-specific sections such as `g0w0_sigc_*`, `g0w0_build_sigc_KS`, or `g0w0_solve_band_qpe` as evidence of ongoing progress
+    - Check that the rank-0 output does not yet contain `Timer stop:  total.`
+    - Check that the rank-0 output file is still growing or has recent timestamp updates
   verify:
     - Confirm file modification time is recent relative to the current check
     - Confirm new lines are being appended between checks
   applies_to:
     mode: gw
     stage: librpa_running
+
+- id: gw-librpa-failed-607
+  scene: Judge whether LibRPA should be treated as failed
+  symptom: Need a simple failure decision without introducing extra states
+  root_cause: In the simplified workflow, any LibRPA state that is neither successful nor still progressing should be treated as failure
+  fix:
+    - If `Timer stop:  total.` exists and final GW band files exist, treat as success
+    - Else if the rank-0 output is still growing, treat as running
+    - Else treat the run as failed
+  verify:
+    - Confirm the run has no final completion marker
+    - Confirm the rank-0 output is no longer growing or no active output file exists
+  applies_to:
+    mode: gw
+    stage: librpa_failed

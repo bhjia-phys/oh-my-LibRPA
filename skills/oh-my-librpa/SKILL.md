@@ -141,13 +141,14 @@ Then proceed as follows:
 13. Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when working on the server.
 14. Run smoke-first setup.
 15. Validate outputs using stage-specific success criteria before escalation.
-16. For a full GW chain, judge stages with generic markers. Only `LibRPA` needs explicit running-state monitoring; `pyatb` and `preprocess` usually only need completion checks:
+16. For a full GW chain, judge stages with generic markers. Only `LibRPA` needs explicit status monitoring; `pyatb` and `preprocess` usually only need completion checks:
    - SCF: completed `running_scf.log` + `ABACUS-CHARGE-DENSITY.restart`
    - pyatb: `pyatb_librpa_df/` + `band_out` + `KS_eigenvector_*.dat`
    - NSCF: completed `running_nscf.log` + `eig.txt`
    - preprocess: `band_kpath_info` + `band_KS_*` + `band_vxc*`
    - LibRPA success: rank-0 output reaches `Timer stop:  total.` and `GW_band_spin_*.dat` exists
-   - LibRPA running: rank-0 output exists, is still growing, and has no final `Timer stop:  total.` yet
+   - LibRPA running: rank-0 output exists, has no final `Timer stop:  total.` yet, and is still growing
+   - LibRPA failed: no final `Timer stop:  total.` and the rank-0 output is no longer growing, or the output file is missing
 17. Report each stage before moving to the next critical stage.
 
 ## Routing Rules

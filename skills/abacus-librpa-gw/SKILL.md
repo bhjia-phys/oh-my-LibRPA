@@ -134,7 +134,7 @@ Interpretation:
 
 Use these generic checks for a full ABACUS + LibRPA GW chain.
 
-Only `LibRPA` needs an explicit `still running` judgment in the normal workflow. `pyatb` and `preprocess` are usually short and only need completion checks.
+Only `LibRPA` needs an explicit status judgment in the normal workflow. `pyatb` and `preprocess` are usually short and only need completion checks.
 
 ### SCF success
 
@@ -168,13 +168,14 @@ Only `LibRPA` needs an explicit `still running` judgment in the normal workflow.
 
 ### LibRPA still running
 
-- `librpa_para_nprocs_*_myid_0.out` exists but does not yet contain `Timer stop:  total.`
-- the file modification time is still recent
-- new timer lines or GW-stage lines continue to appear, such as:
-  - `Timer start:` / `Timer stop:`
-  - `g0w0_sigc_*`
-  - `g0w0_build_sigc_KS`
-  - `g0w0_solve_band_qpe`
+- `librpa_para_nprocs_*_myid_0.out` exists
+- the rank-0 output does not yet contain `Timer stop:  total.`
+- the rank-0 output file is still growing
+
+### LibRPA failed
+
+- there is no final `Timer stop:  total.` marker
+- and the rank-0 output file is no longer growing, or the output file is missing
 
 ## Output Requirement
 
