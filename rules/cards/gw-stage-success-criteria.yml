@@ -46,11 +46,11 @@
 - id: gw-preprocess-success-604
   scene: Judge whether `preprocess_abacus_for_librpa_band.py` finished successfully
   symptom: Need a generic success signal after band preprocessing
-  root_cause: Preprocess success is best judged from the presence of produced band-data files
+  root_cause: Preprocess success is best judged from the presence of the direct preprocess products, not later plotting outputs
   fix:
-    - Check that `band_out` exists in the working directory
     - Check that `band_kpath_info` exists in the working directory
-    - Check that at least one `KS_band_spin_*.dat` file exists
+    - Check that at least one `band_KS_*` file exists
+    - Check that at least one `band_vxc*` file exists
   verify:
     - Confirm all generated files are non-empty
   applies_to:

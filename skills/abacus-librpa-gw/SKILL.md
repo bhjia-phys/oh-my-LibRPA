@@ -154,9 +154,9 @@ Use these generic checks for a full ABACUS + LibRPA GW chain.
 
 ### preprocess success
 
-- `band_out` exists in the working directory
 - `band_kpath_info` exists in the working directory
-- at least one `KS_band_spin_*.dat` file exists
+- at least one `band_KS_*` file exists
+- at least one `band_vxc*` file exists
 
 ### LibRPA success
 

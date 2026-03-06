@@ -145,7 +145,7 @@ Then proceed as follows:
    - SCF: completed `running_scf.log` + `ABACUS-CHARGE-DENSITY.restart`
    - pyatb: `pyatb_librpa_df/` + `band_out` + `KS_eigenvector_*.dat`
    - NSCF: completed `running_nscf.log` + `eig.txt`
-   - preprocess: `band_out` + `band_kpath_info` + `KS_band_spin_*.dat`
+   - preprocess: `band_kpath_info` + `band_KS_*` + `band_vxc*`
    - LibRPA success: rank-0 output reaches `Timer stop:  total.` and `GW_band_spin_*.dat` exists
    - LibRPA running: rank-0 output exists, is still growing, and has no final `Timer stop:  total.` yet
 17. Report each stage before moving to the next critical stage.
