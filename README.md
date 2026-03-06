@@ -10,6 +10,15 @@
 curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/install.sh | bash
 ```
 
+## 给 AI 安装（推荐）
+
+把下面这段话直接发给你的 AI 助手：
+
+```text
+Install and configure oh-my-librpa by following:
+https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/installation.md
+```
+
 开发态本地安装：
 
 ```bash
