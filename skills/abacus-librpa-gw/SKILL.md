@@ -17,6 +17,12 @@ Execution order depends on system type:
 - Verify `librpa.in` is generated from the same ABACUS workflow chain.
 - Verify the run is in a fresh directory to avoid stale-output contamination.
 - Prefer server-side scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when available.
+- Recognize the canonical file bundle from server examples:
+  - `INPUT`, `INPUT_scf`, `INPUT_nscf`
+  - `KPT`, `KPT_scf`, `KPT_nscf`
+  - `STRU`, `geometry.in`, `librpa.in`
+  - `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`
+  - `.orb`, `.abfs`, `.upf`
 
 ## Default `librpa.in` Preset for GW
 

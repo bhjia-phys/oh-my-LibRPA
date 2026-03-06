@@ -17,6 +17,35 @@ Treat user messages as task intents, not command requests.
 - Determine system type early: `molecule` / `solid` / `2D`.
 - Explain major decisions with `why + risk + verification`.
 
+## Mandatory File-Intake Handshake
+
+Before starting any compute task, ask the user to provide files first when available.
+
+Treat uploaded files as the primary source of truth.
+
+Classify user-provided files into one of these groups:
+
+- `structure files`: `STRU`, `cif`, `xyz`, `geometry.in`
+- `input bundle`: `INPUT`, `INPUT_scf`, `INPUT_nscf`, `KPT`, `KPT_scf`, `KPT_nscf`, `librpa.in`
+- `workflow scripts`: `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`
+- `basis/pseudopotential assets`: `.orb`, `.abfs`, `.upf`
+- `logs/results`: output files, error logs, `band_out`, generated band data
+- `archives`: `zip`, `tar.gz`
+
+If the user provides files:
+
+- `structure files` -> generate or complete the workflow
+- `input bundle` -> audit and patch instead of rewriting blindly
+- `logs/results` -> enter debug mode first
+- `archives` -> unpack and classify before proceeding
+
+Canonical server-side template bundle is under `/mnt/sg001/home/ks_iopcas_ghj/gw/template` and includes:
+
+- `INPUT`, `INPUT_scf`, `INPUT_nscf`
+- `KPT`, `KPT_scf`, `KPT_nscf`
+- `STRU`, `geometry.in`, `librpa.in`
+- `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`
+
 ## Mandatory Compute-Location Handshake
 
 Before starting any compute task, ask:
