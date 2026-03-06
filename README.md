@@ -38,7 +38,7 @@ After installation, users can interact only through chat, for example:
 - Core workflow skills: `abacus-librpa-gw`, `abacus-librpa-rpa`, `abacus-librpa-debug`
 - Rule cards (structured experience): scene, symptom, root cause, fix, verify
 - Templates: minimal `INPUT_scf`, `INPUT_nscf`, `librpa.in`
-- Static checker scripts: consistency, run-safety constraints, and stage reporting
+- Static checker scripts and runners: consistency, run-safety constraints, stage reporting, and GW workflow execution
 - Run logging: one Markdown report in the run directory, one archived copy in `~/.openclaw/workspace/librpa/oh-my-librpa/`, plus short stage summaries for users
 
 ## Repository Layout

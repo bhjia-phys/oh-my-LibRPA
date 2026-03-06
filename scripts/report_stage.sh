@@ -60,8 +60,28 @@ require_value() {
   fi
 }
 
+replace_summary_line() {
+  local path="$1"
+  local prefix="$2"
+  local newline="$3"
+  local tmp_file
+  tmp_file="${path}.tmp"
+
+  awk -v prefix="$prefix" -v newline="$newline" '
+    BEGIN { replaced = 0 }
+    index($0, prefix) == 1 && replaced == 0 {
+      print newline
+      replaced = 1
+      next
+    }
+    { print }
+  ' "$path" > "$tmp_file"
+  mv "$tmp_file" "$path"
+}
+
 append_stage_block() {
   local path="$1"
+  replace_summary_line "$path" "- updated_at:" "- updated_at: ${ended_at}"
   cat <<EOF >> "$path"
 
 ---

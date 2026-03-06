@@ -46,6 +46,8 @@ Use hook timing and a shared reporting script together:
 2. call `scripts/report_stage.sh`
 3. send the script stdout to the user as the stage summary
 
+For a full GW execution path, use `scripts/run_gw_workflow.sh` as the execution-layer runner. It executes each stage, verifies the outputs immediately, and then calls `report_stage.sh`.
+
 This keeps orchestration and deterministic reporting separate.
 
 The script should run on the OpenClaw host, not inside the remote compute job.
@@ -91,7 +93,9 @@ Use the same simple convention everywhere:
 - `running`: stage has not finished but its output is still progressing
 - `failed`: stage is neither complete nor still progressing
 
-## Example Command
+## Example Commands
+
+Single stage reporting:
 
 ```bash
 scripts/report_stage.sh \
@@ -112,4 +116,27 @@ scripts/report_stage.sh \
   --what-done "Validated ABACUS SCF outputs." \
   --what-observed "running_scf.log contains Finish Time and the charge-density restart file exists." \
   --next-step "Run pyatb."
+```
+
+Full GW runner:
+
+```bash
+scripts/run_gw_workflow.sh \
+  --run-id 2026-03-06-2307 \
+  --run-dir /path/to/calc \
+  --compute-location server \
+  --ssh-target ks_ghj_3 \
+  --task-label Bi2Se3-dojov4-fr \
+  --system-type solid \
+  --task g0w0_band \
+  --nfreq 16 \
+  --use-soc 1 \
+  --nbands 512 \
+  --kpt "8 8 8" \
+  --kpt-nscf "user-provided" \
+  --scf-cmd "bash run_scf.sh" \
+  --pyatb-cmd "python3 get_diel.py" \
+  --nscf-cmd "bash run_nscf.sh" \
+  --preprocess-cmd "python3 preprocess_abacus_for_librpa_band.py" \
+  --librpa-cmd "mpirun -np 16 librpa"
 ```
