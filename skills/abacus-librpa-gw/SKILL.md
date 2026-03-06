@@ -12,9 +12,11 @@ Execution order depends on system type:
 
 ## Required Checks
 
-- Verify `nbands` consistency between `INPUT_scf` and `INPUT_nscf` under the same basis-size convention.
+- Verify `nbands` in both `INPUT_scf` and `INPUT_nscf` is equal to the basis-function count.
+- Verify `INPUT_scf` and `INPUT_nscf` use the same `nbands`.
 - Verify `librpa.in` is generated from the same ABACUS workflow chain.
 - Verify the run is in a fresh directory to avoid stale-output contamination.
+- Prefer server-side scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when available.
 
 ## Default `librpa.in` Preset for GW
 
@@ -53,7 +55,7 @@ For GW requests, set:
 ### Solid
 
 - Ask the user how many k-points to use in `KPT`; default to `8 8 8`
-- Require a band path in `KPT_nscf`
+- `KPT_nscf` must be provided by the user
 - After SCF, run `pyatb` to generate the `pyatb_librpa_df` directory
 - Then run NSCF
 - Then run `preprocess_abacus_for_librpa_band.py`

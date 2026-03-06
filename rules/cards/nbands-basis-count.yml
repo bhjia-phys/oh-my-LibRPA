@@ -1,0 +1,31 @@
+- id: nbands-equals-basis-count-401
+  scene: Preparing ABACUS inputs for GW or RPA
+  symptom: Need to choose `nbands` consistently for SCF and NSCF
+  root_cause: `nbands` must match the basis-function count, otherwise downstream ABACUS/LibRPA stages become inconsistent
+  fix:
+    - Set `nbands` equal to the basis-function count
+    - Use the same `nbands` in `INPUT_scf` and `INPUT_nscf`
+    - If basis counting is unclear, stop and explain the counting rule before continuing
+  verify:
+    - Confirm `INPUT_scf` and `INPUT_nscf` have identical `nbands`
+    - Confirm `nbands` equals the computed basis-function count
+  applies_to:
+    mode:
+      - gw
+      - rpa
+    system_type:
+      - molecule
+      - solid
+
+- id: solid-kpt-nscf-user-defined-402
+  scene: Solid-state GW preparation
+  symptom: Need an NSCF band path for post-SCF band processing
+  root_cause: `KPT_nscf` depends on the user-selected band path and cannot be safely guessed
+  fix:
+    - Ask the user to define `KPT_nscf`
+    - Do not auto-invent the NSCF path
+  verify:
+    - Confirm `KPT_nscf` is provided by the user before NSCF starts
+  applies_to:
+    mode: gw
+    system_type: solid

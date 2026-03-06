@@ -65,22 +65,27 @@ Then proceed as follows:
    - `libri_g0w0_threshold_C = 1e-5`
    - `libri_g0w0_threshold_G = 1e-5`
    - `libri_g0w0_threshold_Wc = 1e-6`
-7. If the system is `molecule`:
+7. For both `molecule` and `solid` branches:
+   - Set `nbands` equal to the basis-function count
+   - Check that both `INPUT_scf` and `INPUT_nscf` use the same `nbands`
+   - If there is any ambiguity in basis counting, stop and explain the counting rule before proceeding
+8. If the system is `molecule`:
    - Set `KPT = 1 1 1`
    - Add `gamma_only 1` to `INPUT_scf`
    - Use official ABACUS input names from the ABACUS input documentation
    - Do not run `pyatb`
    - Set `replace_w_head = f` in `librpa.in`
-8. If the system is `solid`:
+9. If the system is `solid`:
    - Ask how many k-points to use in `KPT`; default to `8 8 8`
-   - Require a band path in `KPT_nscf`
+   - `KPT_nscf` must be defined by the user
    - After SCF, run `pyatb` to generate `pyatb_librpa_df`
    - Then run NSCF
    - Then run `preprocess_abacus_for_librpa_band.py` to generate band information files
    - Then run `LibRPA`
-9. Run smoke-first setup.
-10. Validate outputs and then escalate accuracy stepwise.
-11. Report each stage before moving to the next critical stage.
+10. Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when working on the server.
+11. Run smoke-first setup.
+12. Validate outputs and then escalate accuracy stepwise.
+13. Report each stage before moving to the next critical stage.
 
 ## Routing Rules
 

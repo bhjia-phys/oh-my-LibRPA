@@ -23,15 +23,16 @@
   root_cause: Solids require k-point sampling, DF generation, and NSCF band-path preprocessing
   fix:
     - Ask for `KPT` mesh size; default to `8 8 8`
-    - Require a band path in `KPT_nscf`
+    - Require the user to define `KPT_nscf`
     - Run `SCF`
     - Run `pyatb` to generate `pyatb_librpa_df`
     - Run `NSCF`
     - Run `preprocess_abacus_for_librpa_band.py`
     - Run `LibRPA`
+    - Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template`
   verify:
     - Confirm the chosen `KPT` mesh in `KPT`
-    - Confirm a band path exists in `KPT_nscf`
+    - Confirm `KPT_nscf` is provided by the user
     - Confirm the `pyatb_librpa_df` directory is generated after `pyatb`
     - Confirm band information files are generated before `LibRPA`
   applies_to:
