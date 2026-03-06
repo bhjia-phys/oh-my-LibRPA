@@ -158,6 +158,28 @@ verify_librpa_success_stage() {
   return 1
 }
 
+verify_rpa_librpa_success_stage() {
+  local compute_location="$1"
+  local ssh_target="$2"
+  local run_dir="$3"
+
+  local rank0
+  rank0="$(find_librpa_rank0_output "$compute_location" "$ssh_target" "$run_dir" || true)"
+  if [[ -z "$rank0" ]]; then
+    VERIFY_MESSAGE='LibRPA rank-0 output file is missing.'
+    return 1
+  fi
+
+  local body="grep -q 'Timer stop:  total\.' '$rank0'"
+  if run_target_command "$compute_location" "$ssh_target" "$run_dir" "$body"; then
+    VERIFY_MESSAGE='LibRPA rank-0 output reached `Timer stop:  total.`.'
+    return 0
+  fi
+
+  VERIFY_MESSAGE='LibRPA did not reach the final completion marker: expected `Timer stop:  total.` in rank-0 output.'
+  return 1
+}
+
 librpa_running_observation() {
   local compute_location="$1"
   local ssh_target="$2"

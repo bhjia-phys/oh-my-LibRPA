@@ -48,6 +48,8 @@ Use hook timing and a shared reporting script together:
 
 For a full GW execution path, use `scripts/run_gw_workflow.sh` as the execution-layer runner. It executes each stage, verifies the outputs immediately, and then calls `report_stage.sh`.
 
+For a full RPA execution path, use `scripts/run_rpa_workflow.sh` as the execution-layer runner. It executes `SCF -> LibRPA`, verifies SCF immediately, and reports LibRPA as `running`, `success`, or `failed`.
+
 This keeps orchestration and deterministic reporting separate.
 
 The script should run on the OpenClaw host, not inside the remote compute job.
@@ -138,5 +140,24 @@ scripts/run_gw_workflow.sh \
   --pyatb-cmd "python3 get_diel.py" \
   --nscf-cmd "bash run_nscf.sh" \
   --preprocess-cmd "python3 preprocess_abacus_for_librpa_band.py" \
+  --librpa-cmd "mpirun -np 16 librpa"
+```
+
+Full RPA runner:
+
+```bash
+scripts/run_rpa_workflow.sh \
+  --run-id 2026-03-06-2307 \
+  --run-dir /path/to/calc \
+  --compute-location server \
+  --ssh-target ks_ghj_3 \
+  --task-label Si-rpa-smoke \
+  --system-type solid \
+  --task rpa \
+  --nfreq 16 \
+  --use-soc 0 \
+  --nbands 256 \
+  --kpt "8 8 8" \
+  --scf-cmd "bash run_scf.sh" \
   --librpa-cmd "mpirun -np 16 librpa"
 ```

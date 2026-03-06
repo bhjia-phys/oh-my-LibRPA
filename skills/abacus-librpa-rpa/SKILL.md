@@ -43,6 +43,7 @@ For RPA requests, set:
 
 - Start with a small-system smoke case to validate the SCF -> LibRPA chain.
 - Increase `nfreq` and related accuracy settings step by step.
+- For full execution, prefer the installed `run_rpa_workflow.sh` runner so stage execution, verification, and reporting stay in one flow.
 
 ## Static Checklist
 

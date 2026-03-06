@@ -152,8 +152,9 @@ Then proceed as follows:
    - LibRPA running: rank-0 output exists, has no final `Timer stop:  total.` yet, and is still growing
    - LibRPA failed: no final `Timer stop:  total.` and the rank-0 output is no longer growing, or the output file is missing
 19. For a full GW execution path, prefer the installed `run_gw_workflow.sh` runner so stage execution, verification, and reporting stay in one flow.
-20. After each verified stage update, call the installed `report_stage.sh` helper to write both Markdown logs: the run-directory `run-report.md` and the archived copy under `~/.openclaw/workspace/librpa/oh-my-librpa/`.
-21. Send the script stdout to the user as the stage summary before moving to the next critical stage.
+20. For a full RPA execution path, prefer the installed `run_rpa_workflow.sh` runner so stage execution, verification, and reporting stay in one flow.
+21. After each verified stage update, call the installed `report_stage.sh` helper to write both Markdown logs: the run-directory `run-report.md` and the archived copy under `~/.openclaw/workspace/librpa/oh-my-librpa/`.
+22. Send the script stdout to the user as the stage summary before moving to the next critical stage.
 
 ## Routing Rules
 
