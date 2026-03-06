@@ -25,4 +25,4 @@ Locate the failing stage first, then provide targeted fixes. Avoid broad blind m
 - `most_likely_root_cause`
 - `minimal_fix_action`
 - `validation_action`
-- update both task Markdown logs and send the user a short stage summary
+- call the installed `report_stage.sh` helper to update both task Markdown logs and send the user a short stage summary

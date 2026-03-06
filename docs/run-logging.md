@@ -38,6 +38,18 @@ Each Markdown run log should record:
 - final result
 - next suggested action
 
+## Hook + Script Pattern
+
+Use hook timing and a shared reporting script together:
+
+1. verify the stage result first
+2. call `scripts/report_stage.sh`
+3. send the script stdout to the user as the stage summary
+
+This keeps orchestration and deterministic reporting separate.
+
+The script should run on the OpenClaw host, not inside the remote compute job.
+
 ## User-Facing Update Format
 
 After each stage update, send the user a short summary with exactly these three parts:
@@ -78,3 +90,26 @@ Use the same simple convention everywhere:
 - `success`: stage reached its completion markers
 - `running`: stage has not finished but its output is still progressing
 - `failed`: stage is neither complete nor still progressing
+
+## Example Command
+
+```bash
+scripts/report_stage.sh \
+  --run-id 2026-03-06-2307 \
+  --mode gw \
+  --stage scf \
+  --status success \
+  --run-dir /path/to/calc \
+  --task-label Bi2Se3-dojov4-fr \
+  --compute-location server \
+  --system-type solid \
+  --task g0w0_band \
+  --nfreq 16 \
+  --use-soc 1 \
+  --nbands 512 \
+  --kpt "8 8 8" \
+  --kpt-nscf "user-provided" \
+  --what-done "Validated ABACUS SCF outputs." \
+  --what-observed "running_scf.log contains Finish Time and the charge-density restart file exists." \
+  --next-step "Run pyatb."
+```

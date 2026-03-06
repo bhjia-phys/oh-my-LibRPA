@@ -184,4 +184,4 @@ For each recommendation, provide:
 - why this change is needed
 - what risk it addresses
 - how to validate it with minimal cost
-- update both task Markdown logs and send the user a short stage summary
+- call the installed `report_stage.sh` helper to update both task Markdown logs and send the user a short stage summary
