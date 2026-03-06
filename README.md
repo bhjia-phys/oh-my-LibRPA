@@ -1,22 +1,22 @@
-# oh-my-librpa
+# oh-my-LibRPA
 
-`oh-my-librpa` 是一个面向 `ABACUS + LibRPA`（并可扩展到其他 DFT 软件）的 **对话优先（chat-first）** AI 经验层。
+`oh-my-LibRPA` 是一个面向 `ABACUS + LibRPA`（并可扩展到其他 DFT 软件）的 **对话优先（chat-first）** AI 经验层。
 
 目标：用户只需要自然语言描述任务，AI 自动按经验完成 GW/RPA 的准备、检查、诊断与迭代。
-
-## 一键安装（用户侧）
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/install.sh | bash
-```
 
 ## 给 AI 安装（推荐）
 
 把下面这段话直接发给你的 AI 助手：
 
 ```text
-Install and configure oh-my-librpa by following:
+Install and configure oh-my-LibRPA by following:
 https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/installation.md
+```
+
+## 一键安装（用户侧）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/install.sh | bash
 ```
 
 开发态本地安装：
