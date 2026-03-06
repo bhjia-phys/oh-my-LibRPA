@@ -134,6 +134,8 @@ Interpretation:
 
 Use these generic checks for a full ABACUS + LibRPA GW chain.
 
+Only `LibRPA` needs an explicit `still running` judgment in the normal workflow. `pyatb` and `preprocess` are usually short and only need completion checks.
+
 ### SCF success
 
 - `OUT.ABACUS/running_scf.log` exists

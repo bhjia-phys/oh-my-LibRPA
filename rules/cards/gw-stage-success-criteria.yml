@@ -74,8 +74,8 @@
 
 - id: gw-librpa-running-606
   scene: Judge whether LibRPA is still progressing rather than stalled or finished
-  symptom: LibRPA is long-running and users need a progress-aware status check
-  root_cause: During execution, the strongest generic signal is an active rank-0 output file with advancing timer stages but without the final completion marker yet
+  symptom: LibRPA is the only stage in the standard GW chain that usually needs explicit running-state checks
+  root_cause: `pyatb` and `preprocess` are usually short, while LibRPA is long-running enough to require progress-aware monitoring
   fix:
     - Check that `librpa_para_nprocs_*_myid_0.out` exists
     - If `Timer stop:  total.` is absent, inspect whether the file is still growing or has recent timestamp updates

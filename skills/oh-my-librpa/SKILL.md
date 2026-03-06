@@ -141,7 +141,7 @@ Then proceed as follows:
 13. Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when working on the server.
 14. Run smoke-first setup.
 15. Validate outputs using stage-specific success criteria before escalation.
-16. For a full GW chain, judge stages with generic markers:
+16. For a full GW chain, judge stages with generic markers. Only `LibRPA` needs explicit running-state monitoring; `pyatb` and `preprocess` usually only need completion checks:
    - SCF: completed `running_scf.log` + `ABACUS-CHARGE-DENSITY.restart`
    - pyatb: `pyatb_librpa_df/` + `band_out` + `KS_eigenvector_*.dat`
    - NSCF: completed `running_nscf.log` + `eig.txt`
