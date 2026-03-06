@@ -42,10 +42,31 @@ Then proceed as follows:
 1. Create a fresh isolated run directory (timestamped).
 2. Verify no overwrite of original data directories.
 3. Classify system type (`molecule` / `solid` / `2D`).
-4. Generate workflow inputs from matched experience rules.
-5. Run smoke-first setup (for example conservative `nfreq` baseline).
-6. Validate outputs and then escalate accuracy stepwise.
-7. Report each stage before moving to the next critical stage.
+4. Classify task type:
+   - GW request -> `task = g0w0_band`
+   - RPA request -> `task = rpa`
+5. Generate workflow inputs from matched experience rules.
+6. Apply shared default `librpa.in` baseline unless a stronger rule overrides it:
+   - `nfreq = 16`
+   - `option_dielect_func = 3`
+   - `replace_w_head = t`
+   - `use_scalapack_gw_wc = t`
+   - `parallel_routing = libri`
+   - `vq_threshold = 0`
+   - `sqrt_coulomb_threshold = 0`
+   - `use_fullcoul_exx = t`
+   - `output_gw_sigc_mat_rf = t`
+   - `libri_chi0_threshold_C = 1e-4`
+   - `libri_chi0_threshold_G = 1e-5`
+   - `libri_exx_threshold_V = 1e-1`
+   - `libri_exx_threshold_C = 1e-4`
+   - `libri_exx_threshold_D = 1e-4`
+   - `libri_g0w0_threshold_C = 1e-5`
+   - `libri_g0w0_threshold_G = 1e-5`
+   - `libri_g0w0_threshold_Wc = 1e-6`
+7. Run smoke-first setup.
+8. Validate outputs and then escalate accuracy stepwise.
+9. Report each stage before moving to the next critical stage.
 
 ## Routing Rules
 

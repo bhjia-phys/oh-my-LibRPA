@@ -7,6 +7,29 @@ description: ABACUS + LibRPA RPA workflow guidance with focus on dielectric setu
 
 Primary objective: get stable and reproducible RPA results first, then optimize performance and scale.
 
+## Default `librpa.in` Preset for RPA
+
+For RPA requests, set:
+
+- `task = rpa`
+- `nfreq = 16`
+- `option_dielect_func = 3`
+- `replace_w_head = t`
+- `use_scalapack_gw_wc = t`
+- `parallel_routing = libri`
+- `vq_threshold = 0`
+- `sqrt_coulomb_threshold = 0`
+- `use_fullcoul_exx = t`
+- `output_gw_sigc_mat_rf = t`
+- `libri_chi0_threshold_C = 1e-4`
+- `libri_chi0_threshold_G = 1e-5`
+- `libri_exx_threshold_V = 1e-1`
+- `libri_exx_threshold_C = 1e-4`
+- `libri_exx_threshold_D = 1e-4`
+- `libri_g0w0_threshold_C = 1e-5`
+- `libri_g0w0_threshold_G = 1e-5`
+- `libri_g0w0_threshold_Wc = 1e-6`
+
 ## Recommended Flow
 
 - Start with a small-system smoke case to validate the full input chain.

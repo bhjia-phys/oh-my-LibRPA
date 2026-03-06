@@ -13,6 +13,29 @@ Execution order: `SCF -> DF (pyatb_librpa_df) -> NSCF -> LibRPA`.
 - Verify `librpa.in` is generated from the same ABACUS workflow chain.
 - Verify the run is in a fresh directory to avoid stale-output contamination.
 
+## Default `librpa.in` Preset for GW
+
+For GW requests, set:
+
+- `task = g0w0_band`
+- `nfreq = 16`
+- `option_dielect_func = 3`
+- `replace_w_head = t`
+- `use_scalapack_gw_wc = t`
+- `parallel_routing = libri`
+- `vq_threshold = 0`
+- `sqrt_coulomb_threshold = 0`
+- `use_fullcoul_exx = t`
+- `output_gw_sigc_mat_rf = t`
+- `libri_chi0_threshold_C = 1e-4`
+- `libri_chi0_threshold_G = 1e-5`
+- `libri_exx_threshold_V = 1e-1`
+- `libri_exx_threshold_C = 1e-4`
+- `libri_exx_threshold_D = 1e-4`
+- `libri_g0w0_threshold_C = 1e-5`
+- `libri_g0w0_threshold_G = 1e-5`
+- `libri_g0w0_threshold_Wc = 1e-6`
+
 ## Coupled Parameter Rule
 
 If `use_shrink_abfs = t`, the following coupled parameters must exist:
