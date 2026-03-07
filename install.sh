@@ -10,6 +10,7 @@ set -euo pipefail
 # - OH_MY_LIBRPA_SKIP_RESTART=1: skip gateway restart
 # - OH_MY_LIBRPA_SKIP_SELF_TEST=1: skip post-install self-test
 # - OH_MY_LIBRPA_RESTART_MODE=auto|immediate|defer|skip (default: auto)
+# - OH_MY_LIBRPA_INSTALL_MODE=install|update (default: install)
 
 say() { printf "[oh-my-librpa] %s\n" "$*"; }
 fail() { printf "[oh-my-librpa] ERROR: %s\n" "$*" >&2; exit 1; }
@@ -138,6 +139,32 @@ copy_dir_contents() {
   cp -R "$src/." "$dest/"
 }
 
+write_install_state() {
+  local state_file="$1"
+  local repo_url=""
+  local branch=""
+  local commit=""
+  local install_mode="${OH_MY_LIBRPA_INSTALL_MODE:-install}"
+
+  if [[ -d "$source_dir/.git" ]]; then
+    repo_url="$(git -C "$source_dir" remote get-url origin 2>/dev/null || true)"
+    branch="$(git -C "$source_dir" branch --show-current 2>/dev/null || true)"
+    commit="$(git -C "$source_dir" rev-parse HEAD 2>/dev/null || true)"
+  elif [[ -n "${OH_MY_LIBRPA_REPO:-}" ]]; then
+    repo_url="${OH_MY_LIBRPA_REPO}"
+  fi
+
+  {
+    printf 'OH_MY_LIBRPA_INSTALL_MODE=%q\n' "$install_mode"
+    printf 'OH_MY_LIBRPA_INSTALLED_AT=%q\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    printf 'OH_MY_LIBRPA_WORKSPACE_DIR=%q\n' "$workspace_dir"
+    printf 'OH_MY_LIBRPA_INSTALL_SOURCE_DIR=%q\n' "$source_dir"
+    printf 'OH_MY_LIBRPA_INSTALL_REPO_URL=%q\n' "$repo_url"
+    printf 'OH_MY_LIBRPA_INSTALL_BRANCH=%q\n' "$branch"
+    printf 'OH_MY_LIBRPA_INSTALL_COMMIT=%q\n' "$commit"
+  } > "$state_file"
+}
+
 source_dir="${OH_MY_LIBRPA_SOURCE:-}"
 if [[ -z "$source_dir" ]]; then
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -172,13 +199,20 @@ if [[ "$copy_tool" == "cp" ]]; then
   say "rsync not available; using cp -R for installation copy steps"
 fi
 
+install_mode="${OH_MY_LIBRPA_INSTALL_MODE:-install}"
+case "$install_mode" in
+  install) action_word="Installing" ;;
+  update) action_word="Updating" ;;
+  *) action_word="Syncing" ;;
+esac
+
 skills_target="$workspace_dir/skills"
 assets_target="$workspace_dir/oh-my-librpa"
 
-say "Installing skills into $skills_target"
+say "$action_word skills into $skills_target"
 copy_dir_contents "$source_dir/skills" "$skills_target"
 
-say "Installing rulebook assets into $assets_target"
+say "$action_word rulebook assets into $assets_target"
 mkdir -p "$assets_target"
 for dir in rules templates references docs scripts registry examples; do
   if [[ -d "$source_dir/$dir" ]]; then
@@ -186,11 +220,19 @@ for dir in rules templates references docs scripts registry examples; do
   fi
 done
 
-find "$assets_target/scripts" -type f -name '*.sh' -exec chmod +x {} +
+for file in install.sh update.sh; do
+  if [[ -f "$source_dir/$file" ]]; then
+    cp "$source_dir/$file" "$assets_target/$file"
+  fi
+done
+
+find "$assets_target" -type f -name '*.sh' -exec chmod +x {} +
+
+write_install_state "$assets_target/install-state.env"
 
 if [[ "${OH_MY_LIBRPA_SKIP_SELF_TEST:-0}" != "1" ]]; then
-  say "Running post-install self-test"
-  "$assets_target/scripts/self_test.sh" --workspace "$workspace_dir" --installed-root "$assets_target" || fail "post-install self-test failed"
+  say "Running post-${install_mode} self-test"
+  "$assets_target/scripts/self_test.sh" --workspace "$workspace_dir" --installed-root "$assets_target" || fail "post-${install_mode} self-test failed"
 fi
 
 restart_mode="${OH_MY_LIBRPA_RESTART_MODE:-auto}"

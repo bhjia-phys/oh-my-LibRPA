@@ -26,6 +26,20 @@ cd ~/code/oh-my-librpa
 bash install.sh
 ```
 
+## Update
+
+After the first install, update in place without rethinking the workspace path:
+
+```bash
+~/.openclaw/workspace/oh-my-librpa/update.sh
+```
+
+Or fetch the latest updater directly:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/update.sh | bash
+```
+
 After installation, users can interact only through chat, for example:
 
 - `Help me run GW for GaAs with a conservative setup first.`
@@ -40,7 +54,8 @@ After installation, users can interact only through chat, for example:
 - Templates: minimal `INPUT_scf`, `INPUT_nscf`, `librpa.in`
 - Static checker scripts and runners: intake/preflight, route-aware consistency checks, run-safety constraints, stage reporting, and GW/RPA workflow execution
 - Run logging: one Markdown report in the run directory, one archived copy in `~/.openclaw/workspace/librpa/oh-my-librpa/`, plus short stage summaries for users
-- Installer self-test: validate skills, scripts, and log-writing path right after installation
+- Installer self-test: validate skills, scripts, metadata, and log-writing path right after installation
+- In-place updater: reuse the recorded source/workspace and refresh the install without manual path setup
 
 ## Repository Layout
 

@@ -56,6 +56,9 @@ for path in \
   "$workspace/skills/abacus-librpa-gw/SKILL.md" \
   "$workspace/skills/abacus-librpa-rpa/SKILL.md" \
   "$workspace/skills/abacus-librpa-debug/SKILL.md" \
+  "$installed_root/install.sh" \
+  "$installed_root/update.sh" \
+  "$installed_root/install-state.env" \
   "$installed_root/rules/cards/librpa-default-presets.yml" \
   "$installed_root/rules/cards/molecular-gw-short-route.yml" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \
@@ -70,6 +73,7 @@ for path in \
 done
 
 for script in \
+  "$installed_root/update.sh" \
   "$installed_root/scripts/check_consistency.sh" \
   "$installed_root/scripts/intake_preflight.sh" \
   "$installed_root/scripts/report_stage.sh" \

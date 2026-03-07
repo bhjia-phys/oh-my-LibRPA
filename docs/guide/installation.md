@@ -15,6 +15,18 @@ Or run one command:
 curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/install.sh | bash
 ```
 
+To update later without repeating workspace setup, run:
+
+```bash
+~/.openclaw/workspace/oh-my-librpa/update.sh
+```
+
+Or fetch the latest updater directly:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/update.sh | bash
+```
+
 After installation, users only need natural-language chat (no CLI memorization).
 
 If installation is triggered from inside an active OpenClaw chat, the installer now keeps the conversation alive by deferring the gateway restart and printing the manual restart command.
@@ -51,9 +63,11 @@ OH_MY_LIBRPA_WORKSPACE="$HOME/.openclaw/workspace" bash install.sh
 - Detect OpenClaw workspace from `OH_MY_LIBRPA_WORKSPACE`, then `OPENCLAW_WORKSPACE`, then `~/.openclaw/openclaw.json`, and finally fall back to `~/.openclaw/workspace`
 - Install skills into `<workspace>/skills/`
 - Install rules/templates/docs/scripts into `<workspace>/oh-my-librpa/`
+- Copy `install.sh` and `update.sh` into `<workspace>/oh-my-librpa/` for future maintenance
 - Prefer `rsync` for copying, but fall back to `cp -R` when `rsync` is unavailable
+- Write `install-state.env` so future updates know the last source, repo, branch, and workspace
 - Make shipped shell scripts executable
-- Run a local post-install self-test for the installed skills, scripts, and log-writing path
+- Run a local post-install self-test for the installed skills, scripts, metadata, and log-writing path
 - Restart gateway in a normal shell install
 - Defer gateway restart automatically when installation is launched from an active OpenClaw conversation, so the current chat is not interrupted
 
@@ -71,6 +85,8 @@ You can rerun the validation manually after installation:
 ~/.openclaw/workspace/oh-my-librpa/scripts/self_test.sh
 ```
 
+The updater reuses `~/.openclaw/workspace/oh-my-librpa/install-state.env` when available. If that file is missing, it falls back to the default repository URL and workspace detection.
+
 ## Validation
 
 After install, test by chat only:
@@ -85,3 +101,4 @@ Expected behavior:
 - AI starts with intake/preflight and tells the user what is missing before execution
 - AI applies curated experience rules and explains why
 - AI enforces run-safety constraints (new directory, no overwrite)
+- Future refreshes can use `~/.openclaw/workspace/oh-my-librpa/update.sh` instead of repeating the initial install flow
