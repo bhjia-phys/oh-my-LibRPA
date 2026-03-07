@@ -17,6 +17,8 @@ curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/inst
 
 After installation, users only need natural-language chat (no CLI memorization).
 
+If installation is triggered from inside an active OpenClaw chat, the installer now keeps the conversation alive by deferring the gateway restart and printing the manual restart command.
+
 ## For LLM Agents
 
 Fetch this guide via shell (do not summarize away actionable details):
@@ -45,7 +47,16 @@ bash install.sh
 - Install rules/templates/docs/scripts into `<workspace>/oh-my-librpa/`
 - Make shipped shell scripts executable
 - Run a local post-install self-test for the installed skills, scripts, and log-writing path
-- Restart gateway
+- Restart gateway in a normal shell install
+- Defer gateway restart automatically when installation is launched from an active OpenClaw conversation, so the current chat is not interrupted
+
+If you want to control restart behavior explicitly:
+
+```bash
+OH_MY_LIBRPA_RESTART_MODE=immediate bash install.sh
+OH_MY_LIBRPA_RESTART_MODE=defer bash install.sh
+OH_MY_LIBRPA_RESTART_MODE=skip bash install.sh
+```
 
 You can rerun the validation manually after installation:
 

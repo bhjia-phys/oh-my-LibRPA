@@ -9,6 +9,7 @@ set -euo pipefail
 # - OH_MY_LIBRPA_WORKSPACE: override OpenClaw workspace dir
 # - OH_MY_LIBRPA_SKIP_RESTART=1: skip gateway restart
 # - OH_MY_LIBRPA_SKIP_SELF_TEST=1: skip post-install self-test
+# - OH_MY_LIBRPA_RESTART_MODE=auto|immediate|defer|skip (default: auto)
 
 say() { printf "[oh-my-librpa] %s\n" "$*"; }
 fail() { printf "[oh-my-librpa] ERROR: %s\n" "$*" >&2; exit 1; }
@@ -100,12 +101,37 @@ if [[ "${OH_MY_LIBRPA_SKIP_SELF_TEST:-0}" != "1" ]]; then
   "$assets_target/scripts/self_test.sh" --workspace "$workspace_dir" --installed-root "$assets_target" || fail "post-install self-test failed"
 fi
 
-if [[ "${OH_MY_LIBRPA_SKIP_RESTART:-0}" != "1" ]]; then
+restart_mode="${OH_MY_LIBRPA_RESTART_MODE:-auto}"
+if [[ "${OH_MY_LIBRPA_SKIP_RESTART:-0}" == "1" ]]; then
+  restart_mode="skip"
+fi
+
+case "$restart_mode" in
+  auto)
+    if [[ "${OPENCLAW_SERVICE_KIND:-}" == "gateway" || "${OPENCLAW_SHELL:-}" == "exec" ]]; then
+      restart_mode="defer"
+    else
+      restart_mode="immediate"
+    fi
+    ;;
+  immediate|defer|skip)
+    ;;
+  *)
+    fail "unsupported OH_MY_LIBRPA_RESTART_MODE: $restart_mode"
+    ;;
+esac
+
+if [[ "$restart_mode" == "immediate" ]]; then
   say "Restarting OpenClaw gateway"
   if ! openclaw gateway restart >/dev/null 2>&1; then
     say "Gateway restart failed; trying start"
     openclaw gateway start >/dev/null 2>&1 || fail "gateway restart/start failed"
   fi
+elif [[ "$restart_mode" == "defer" ]]; then
+  say "Deferring gateway restart to avoid interrupting the current OpenClaw conversation."
+  say "Run 'openclaw gateway restart' after this chat to activate the new install."
+else
+  say "Skipping gateway restart."
 fi
 
 say "Install complete."
