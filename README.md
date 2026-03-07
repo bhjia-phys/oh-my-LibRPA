@@ -13,6 +13,13 @@ Install and configure oh-my-LibRPA by following:
 https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/installation.md
 ```
 
+For Windows users with Git Bash, use this instead:
+
+```text
+On Windows, use Git Bash instead of WSL, and follow:
+https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/windows-git-bash.md
+```
+
 ## One-Command Install (Human)
 
 ```bash
