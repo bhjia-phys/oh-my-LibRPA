@@ -40,11 +40,18 @@ cd ~/code/oh-my-librpa
 bash install.sh
 ```
 
+On Windows / Git Bash, prefer setting the workspace explicitly if OpenClaw workspace detection is uncertain:
+
+```bash
+OH_MY_LIBRPA_WORKSPACE="$HOME/.openclaw/workspace" bash install.sh
+```
+
 ## What the Installer Does
 
-- Detect OpenClaw workspace automatically (no hard-coded path required)
+- Detect OpenClaw workspace from `OH_MY_LIBRPA_WORKSPACE`, then `OPENCLAW_WORKSPACE`, then `~/.openclaw/openclaw.json`, and finally fall back to `~/.openclaw/workspace`
 - Install skills into `<workspace>/skills/`
 - Install rules/templates/docs/scripts into `<workspace>/oh-my-librpa/`
+- Prefer `rsync` for copying, but fall back to `cp -R` when `rsync` is unavailable
 - Make shipped shell scripts executable
 - Run a local post-install self-test for the installed skills, scripts, and log-writing path
 - Restart gateway in a normal shell install
