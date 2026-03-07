@@ -28,13 +28,17 @@ bash install.sh
 
 ## Update
 
-After the first install, update in place without rethinking the workspace path:
+After the first install, do not repeat the full install flow unless you are repairing a broken setup.
+
+Use the in-place updater instead:
 
 ```bash
 ~/.openclaw/workspace/oh-my-librpa/update.sh
 ```
 
-Or fetch the latest updater directly:
+This reuses the recorded workspace/source information and refreshes the existing install.
+
+If the local updater is missing, fetch the latest updater directly:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/update.sh | bash
