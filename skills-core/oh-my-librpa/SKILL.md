@@ -75,7 +75,7 @@ Then proceed as follows:
 
 1. Create a fresh isolated run directory (timestamped).
 2. Create `run-report.md` inside the run directory.
-3. Create one archived Markdown copy under `~/.openclaw/workspace/librpa/oh-my-librpa/` using `<timestamp>-<mode>.md`.
+3. Create one archived Markdown copy under the active platform root at `librpa/oh-my-librpa/` using `<timestamp>-<mode>.md`.
 4. Verify no overwrite of original data directories.
 5. Classify system type (`molecule` / `solid` / `2D`).
 6. Classify task type:
@@ -157,7 +157,7 @@ Then proceed as follows:
    - LibRPA failed: no final `Timer stop:  total.` and the rank-0 output is no longer growing, or the output file is missing
 20. For GW execution, prefer the installed `run_gw_workflow.sh` runner so stage execution, route-aware skipping, verification, and reporting stay in one flow.
 21. For a full RPA execution path, prefer the installed `run_rpa_workflow.sh` runner so stage execution, verification, and reporting stay in one flow.
-22. After each verified stage update, call the installed `report_stage.sh` helper to write both Markdown logs: the run-directory `run-report.md` and the archived copy under `~/.openclaw/workspace/librpa/oh-my-librpa/`.
+22. After each verified stage update, call the installed `report_stage.sh` helper to write both Markdown logs: the run-directory `run-report.md` and the archived copy under the active platform root at `librpa/oh-my-librpa/`.
 23. Send the script stdout to the user as the stage summary before moving to the next critical stage.
 
 ## Routing Rules

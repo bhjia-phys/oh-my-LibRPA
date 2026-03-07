@@ -2,6 +2,10 @@ matrix:
   - stack: abacus+librpa
     status: draft
     notes: Start with smoke-ready static checks; refine by real cases.
+    agent_homes:
+      openclaw: ["project", "user"]
+      opencode: ["project", "user"]
+      codex: ["project", "user"]
     versions:
       abacus: ["3.x"]
       librpa: ["0.x"]

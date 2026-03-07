@@ -4,12 +4,17 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  self_test.sh [--workspace <path>] [--installed-root <path>]
+  self_test.sh \
+    [--workspace <path>] \
+    [--skills-root <path>] \
+    [--installed-root <path>] \
+    [--target <openclaw|opencode|codex>]
 
 Behavior:
   - Validates installed skills and asset layout
   - Syntax-checks the shipped shell scripts
   - Smoke-tests report writing, route-aware checks, and intake preflight
+  - Verifies the default archive root resolves relative to the active platform root
 EOF
 }
 
@@ -24,12 +29,16 @@ fail() {
 }
 
 workspace=""
+skills_root=""
 installed_root=""
+target="unknown"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --workspace) workspace="$2"; shift 2 ;;
+    --skills-root) skills_root="$2"; shift 2 ;;
     --installed-root) installed_root="$2"; shift 2 ;;
+    --target) target="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *)
       echo "Unknown argument: $1" >&2
@@ -44,18 +53,28 @@ if [[ -z "$installed_root" ]]; then
   installed_root="$(cd "$script_dir/.." && pwd)"
 fi
 
-if [[ -z "$workspace" ]]; then
-  workspace="$(cd "$installed_root/.." && pwd)"
+platform_root="$(cd "$installed_root/.." && pwd)"
+
+if [[ -z "$skills_root" && -n "$workspace" ]]; then
+  skills_root="$workspace/skills"
+fi
+
+if [[ -z "$skills_root" ]]; then
+  skills_root="$platform_root/skills"
 fi
 
 pass_count=0
 fail_count=0
 
+default_archive_root="${OH_MY_LIBRPA_ARCHIVE_ROOT:-$platform_root/librpa/oh-my-librpa}"
+
+echo "INFO: target=$target skills_root=$skills_root installed_root=$installed_root"
+
 for path in \
-  "$workspace/skills/oh-my-librpa/SKILL.md" \
-  "$workspace/skills/abacus-librpa-gw/SKILL.md" \
-  "$workspace/skills/abacus-librpa-rpa/SKILL.md" \
-  "$workspace/skills/abacus-librpa-debug/SKILL.md" \
+  "$skills_root/oh-my-librpa/SKILL.md" \
+  "$skills_root/abacus-librpa-gw/SKILL.md" \
+  "$skills_root/abacus-librpa-rpa/SKILL.md" \
+  "$skills_root/abacus-librpa-debug/SKILL.md" \
   "$installed_root/rules/cards/librpa-default-presets.yml" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \
   "$installed_root/templates/run-log.template.md"; do
@@ -102,10 +121,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
+run_id="selftest-$$"
+archive_probe="$default_archive_root/${run_id}-debug.md"
+rm -f "$archive_probe"
 run_dir="$tmp_dir/run"
-archive_root="$tmp_dir/archive"
 if "$installed_root/scripts/report_stage.sh" \
-  --run-id selftest \
+  --run-id "$run_id" \
   --mode debug \
   --stage intake \
   --status success \
@@ -113,10 +134,9 @@ if "$installed_root/scripts/report_stage.sh" \
   --task-label self-test \
   --what-done 'Created a synthetic run report.' \
   --what-observed 'report_stage.sh completed.' \
-  --next-step 'Continue self-test.' \
-  --archive-root "$archive_root" >/dev/null; then
-  if [[ -f "$run_dir/run-report.md" && -f "$archive_root/selftest-debug.md" ]]; then
-    pass 'report_stage.sh created both run and archive logs'
+  --next-step 'Continue self-test.' >/dev/null; then
+  if [[ -f "$run_dir/run-report.md" && -f "$archive_probe" ]]; then
+    pass 'report_stage.sh created both run and default archive logs'
   else
     fail 'report_stage.sh did not create both expected logs'
   fi

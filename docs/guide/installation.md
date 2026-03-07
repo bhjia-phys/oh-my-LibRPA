@@ -1,83 +1,149 @@
 # Installation
 
-## For Humans
+## Recommended: Project-Local Install
+
+Run from the repository root:
+
+```bash
+bash install.sh --target all --layout project
+```
+
+This installs `oh-my-LibRPA` into three repo-local agent homes at once.
+
+Boundary rule:
+
+- install core domain skills from `skills-core/`
+- keep platform-specific notes and adapters under `platform/`
+
+Supported targets:
+
+- `OpenClaw` -> `.openclaw/workspace/`
+- `OpenCode` -> `.opencode/`
+- `Codex` -> `.codex-home/`
+
+Default behavior for project installs:
+
+- `--target all`
+- `--layout project`
+- `--mode auto`
+- `--mode auto` resolves to `link` when the source repository is local
+- `--mode auto` resolves to `copy` when the installer has to clone a temporary source
+
+If you want a pure copy install instead of symlinks:
+
+```bash
+bash install.sh --target all --layout project --mode copy
+```
+
+## Install Specific Targets
+
+```bash
+bash install.sh --target openclaw --layout project
+bash install.sh --target opencode --layout project
+bash install.sh --target codex --layout project
+```
+
+You can also combine targets:
+
+```bash
+bash install.sh --target openclaw,codex --layout project
+```
+
+## Legacy User-Level Install
+
+The previous OpenClaw-style install still works:
+
+```bash
+bash install.sh --target openclaw --layout user
+```
+
+User-level homes can also be overridden explicitly:
+
+```bash
+OH_MY_LIBRPA_OPENCLAW_WORKSPACE="$HOME/.openclaw/workspace" bash install.sh --target openclaw --layout user
+OH_MY_LIBRPA_OPENCODE_HOME="$HOME/.opencode" bash install.sh --target opencode --layout user
+OH_MY_LIBRPA_CODEX_HOME="$HOME/.codex" bash install.sh --target codex --layout user
+```
+
+## Install via AI Agent
 
 Copy this prompt to your AI agent:
 
 ```text
 Install and configure oh-my-LibRPA by following:
-https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/installation.md
-```
-
-Or run one command:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/install.sh | bash
-```
-
-After installation, users only need natural-language chat (no CLI memorization).
-
-If installation is triggered from inside an active OpenClaw chat, the installer now keeps the conversation alive by deferring the gateway restart and printing the manual restart command.
-
-## For LLM Agents
-
-Fetch this guide via shell (do not summarize away actionable details):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/installation.md
-```
-
-Then run installer:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/install.sh | bash
-```
-
-If repository is local (development mode), run:
-
-```bash
-cd ~/code/oh-my-librpa
-bash install.sh
-```
-
-On Windows / Git Bash, prefer setting the workspace explicitly if OpenClaw workspace detection is uncertain:
-
-```bash
-OH_MY_LIBRPA_WORKSPACE="$HOME/.openclaw/workspace" bash install.sh
+https://raw.githubusercontent.com/bhjia-phys/oh-my-LibRPA/main/docs/guide/installation.md
 ```
 
 ## What the Installer Does
 
-- Detect OpenClaw workspace from `OH_MY_LIBRPA_WORKSPACE`, then `OPENCLAW_WORKSPACE`, then `~/.openclaw/openclaw.json`, and finally fall back to `~/.openclaw/workspace`
-- Install skills into `<workspace>/skills/`
-- Install rules/templates/docs/scripts into `<workspace>/oh-my-librpa/`
-- Prefer `rsync` for copying, but fall back to `cp -R` when `rsync` is unavailable
-- Make shipped shell scripts executable
-- Run a local post-install self-test for the installed skills, scripts, and log-writing path
-- Restart gateway in a normal shell install
-- Defer gateway restart automatically when installation is launched from an active OpenClaw conversation, so the current chat is not interrupted
+For each selected target, the installer:
 
-If you want to control restart behavior explicitly:
+- installs core skills from `skills-core/` into `<target-root>/skills/`
+- installs rules/templates/docs/scripts into `<target-root>/oh-my-librpa/`
+- prefers symlinks for project-local installs from a local repo checkout
+- falls back to copy mode when the source is temporary or remote
+- makes shipped shell scripts executable
+- runs a local post-install self-test for the installed skills, scripts, and default archive-root behavior
+
+Target roots:
+
+- `OpenClaw` project root: `<project>/.openclaw/workspace`
+- `OpenCode` project root: `<project>/.opencode`
+- `Codex` project root: `<project>/.codex-home`
+
+## Restart Behavior
+
+OpenClaw gateway restart is only relevant for `--target openclaw --layout user`.
+
+Control it explicitly with:
 
 ```bash
-OH_MY_LIBRPA_RESTART_MODE=immediate bash install.sh
-OH_MY_LIBRPA_RESTART_MODE=defer bash install.sh
-OH_MY_LIBRPA_RESTART_MODE=skip bash install.sh
+bash install.sh --target openclaw --layout user --restart-mode immediate
+bash install.sh --target openclaw --layout user --restart-mode defer
+bash install.sh --target openclaw --layout user --restart-mode skip
 ```
 
-You can rerun the validation manually after installation:
-
-```bash
-~/.openclaw/workspace/oh-my-librpa/scripts/self_test.sh
-```
+For project-local installs, the installer skips restart and prints the target paths instead.
 
 ## Validation
 
-After install, test by chat only:
+You can rerun validation manually for any installed target:
+
+```bash
+<target-root>/oh-my-librpa/scripts/self_test.sh \
+  --skills-root <target-root>/skills \
+  --installed-root <target-root>/oh-my-librpa
+```
+
+Examples:
+
+```bash
+./.openclaw/workspace/oh-my-librpa/scripts/self_test.sh \
+  --skills-root ./.openclaw/workspace/skills \
+  --installed-root ./.openclaw/workspace/oh-my-librpa
+
+./.opencode/oh-my-librpa/scripts/self_test.sh \
+  --skills-root ./.opencode/skills \
+  --installed-root ./.opencode/oh-my-librpa
+
+./.codex-home/oh-my-librpa/scripts/self_test.sh \
+  --skills-root ./.codex-home/skills \
+  --installed-root ./.codex-home/oh-my-librpa
+```
+
+## Runtime Hints
+
+After installation, test by chat only:
 
 - `Help me run GW for Si with a conservative setup first.`
 - `This is a molecular system. Prepare inputs with the molecular route.`
 - `How do we fix this error? Give me the minimal repair action based on experience.`
+
+Platform hints:
+
+- `OpenClaw`: launch with `OPENCLAW_WORKSPACE=<repo>/.openclaw/workspace`
+- `Codex`: launch with `CODEX_HOME=<repo>/.codex-home`
+- `OpenCode`: use the repo-local `.opencode/skills/` install or point your launcher/home override at `<repo>/.opencode`
 
 Expected behavior:
 

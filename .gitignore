@@ -3,3 +3,7 @@
 *.tmp
 .DS_Store
 __pycache__/
+.openclaw/
+.opencode/
+.codex/
+.codex-home/
