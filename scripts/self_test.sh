@@ -57,7 +57,10 @@ for path in \
   "$workspace/skills/abacus-librpa-rpa/SKILL.md" \
   "$workspace/skills/abacus-librpa-debug/SKILL.md" \
   "$installed_root/rules/cards/librpa-default-presets.yml" \
+  "$installed_root/rules/cards/molecular-gw-short-route.yml" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \
+  "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/INPUT_scf.template" \
+  "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/librpa.in.template" \
   "$installed_root/templates/run-log.template.md"; do
   if [[ -f "$path" ]]; then
     pass "Found required file: $path"

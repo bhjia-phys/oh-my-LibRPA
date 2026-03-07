@@ -136,6 +136,21 @@ find_librpa_rank0_output() {
   return 1
 }
 
+verify_molecular_gw_prereqs_stage() {
+  local compute_location="$1"
+  local ssh_target="$2"
+  local run_dir="$3"
+
+  local body='[[ -f vxc_out ]] && compgen -G "coulomb_mat_*.txt" >/dev/null'
+  if run_target_command "$compute_location" "$ssh_target" "$run_dir" "$body"; then
+    VERIFY_MESSAGE='`vxc_out` exists and at least one `coulomb_mat_*.txt` file is present for the molecular GW LibRPA step.'
+    return 0
+  fi
+
+  VERIFY_MESSAGE='Missing molecular GW prerequisites for LibRPA: expected `vxc_out` and at least one `coulomb_mat_*.txt` file in the working directory.'
+  return 1
+}
+
 verify_librpa_success_stage() {
   local compute_location="$1"
   local ssh_target="$2"
@@ -154,7 +169,13 @@ verify_librpa_success_stage() {
     return 0
   fi
 
-  VERIFY_MESSAGE='LibRPA did not reach the final completion markers: expected `Timer stop:  total.` in rank-0 output and `GW_band_spin_*`.'
+  body="grep -q 'libRPA finished successfully' '$rank0' && [[ -f band_out && -f vxc_out ]] && compgen -G 'coulomb_mat_*.txt' >/dev/null"
+  if run_target_command "$compute_location" "$ssh_target" "$run_dir" "$body"; then
+    VERIFY_MESSAGE='LibRPA rank-0 output reports `libRPA finished successfully`, and the molecular GW outputs `band_out`, `vxc_out`, and `coulomb_mat_*.txt` exist.'
+    return 0
+  fi
+
+  VERIFY_MESSAGE='LibRPA did not reach the final completion markers: expected either `Timer stop:  total.` with `GW_band_spin_*`, or the molecular GW markers `libRPA finished successfully` + `band_out` + `vxc_out` + `coulomb_mat_*.txt`.'
   return 1
 }
 

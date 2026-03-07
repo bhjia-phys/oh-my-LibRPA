@@ -239,16 +239,46 @@ if [[ "$resolved_mode" == "gw" && "$resolved_system_type" == "molecule" ]]; then
     note_fail "molecular GW route requires KPT=1 1 1"
   fi
 
-  if grep -qiE '^[[:space:]]*gamma_only[[:space:]]+1([[:space:]]|$)' "$scf"; then
-    note_pass "molecular GW route sets gamma_only 1 in INPUT_scf"
+  if has_key_value "$scf" "out_mat_xc" "1"; then
+    note_pass "molecular GW route keeps out_mat_xc = 1"
   else
-    note_fail "molecular GW route requires 'gamma_only 1' in INPUT_scf"
+    note_fail "molecular GW route requires 'out_mat_xc 1' in INPUT_scf"
+  fi
+
+  if has_key_value "$scf" "exx_use_ewald" "1"; then
+    note_pass "molecular GW route keeps exx_use_ewald = 1"
+  else
+    note_fail "molecular GW route requires 'exx_use_ewald 1' in INPUT_scf so Coulomb files are generated"
+  fi
+
+  if grep -qiE '^[[:space:]]*gamma_only[[:space:]]+1([[:space:]]|$)' "$scf"; then
+    note_pass "gamma_only 1 is enabled for the molecular GW route"
+  else
+    note_warn "gamma_only is not enabled; keep it route-aware rather than treating it as a hard global rule"
+  fi
+
+  if grep -qiE '^[[:space:]]*out_chg[[:space:]]+1([[:space:]]|$)' "$scf"; then
+    note_warn "out_chg is enabled even though the short molecular GW route does not need NSCF"
+  fi
+
+  if grep -qiE '^[[:space:]]*out_mat_r[[:space:]]+1([[:space:]]|$)' "$scf"; then
+    note_warn "out_mat_r is enabled even though the no-pyatb molecular GW route does not need it"
+  fi
+
+  if grep -qiE '^[[:space:]]*out_mat_hs2[[:space:]]+1([[:space:]]|$)' "$scf"; then
+    note_warn "out_mat_hs2 is enabled even though the no-pyatb molecular GW route does not need it"
   fi
 
   if has_key_value "$librpa" "replace_w_head" "f"; then
     note_pass "molecular GW route sets replace_w_head = f"
   else
     note_fail "molecular GW route requires 'replace_w_head = f' in librpa.in"
+  fi
+
+  if has_key_value "$librpa" "use_shrink_abfs" "f"; then
+    note_pass "molecular GW smoke route keeps use_shrink_abfs = f"
+  else
+    note_warn "use_shrink_abfs is not set to f; the tested molecular smoke route used no shrink"
   fi
 fi
 

@@ -60,14 +60,14 @@
 - id: gw-librpa-success-605
   scene: Judge whether LibRPA finished successfully for GW
   symptom: Need a generic success signal for the long LibRPA stage
-  root_cause: LibRPA completion is best judged from the rank-0 output and final GW products
+  root_cause: Periodic and molecular GW routes finish with different final artifact sets
   fix:
     - Check that `librpa_para_nprocs_*_myid_0.out` exists
-    - Check that the rank-0 output contains `Timer stop:  total.`
-    - Check that at least one `GW_band_spin_*.dat` file exists
+    - For the periodic GW route, check that the rank-0 output contains `Timer stop:  total.` and that at least one `GW_band_spin_*.dat` file exists
+    - For the tested molecular short route, check that the rank-0 output contains `libRPA finished successfully` and that `band_out`, `vxc_out`, and at least one `coulomb_mat_*.txt` file exist
   verify:
-    - Confirm the rank-0 output reaches the final `Timer stop:  total.` marker
-    - Confirm final GW band files are non-empty
+    - Confirm the rank-0 output reaches the expected completion marker for the chosen route
+    - Confirm the route-specific final artifacts are non-empty
   applies_to:
     mode: gw
     stage: librpa_success

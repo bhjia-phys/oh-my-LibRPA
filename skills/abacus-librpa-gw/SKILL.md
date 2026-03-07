@@ -7,7 +7,7 @@ description: ABACUS + LibRPA GW workflow guidance and static input checks. Use w
 
 Execution order depends on system type:
 
-- `molecule`: `SCF -> NSCF/band preparation as needed -> LibRPA` (skip `pyatb`)
+- `molecule`: default to the short route `SCF -> LibRPA` unless the user explicitly needs extra band preparation; skip `pyatb`
 - `solid`: `SCF -> DF (pyatb_librpa_df) -> NSCF -> preprocess_abacus_for_librpa_band.py -> LibRPA`
 
 ## Required Checks
@@ -40,6 +40,7 @@ For GW requests, set:
 - `nfreq = 16`
 - `option_dielect_func = 3`
 - `replace_w_head = t`
+- For the tested molecular short route, override with `replace_w_head = f`
 - `use_scalapack_gw_wc = t`
 - `use_scalapack_ecrpa = t`
 - `parallel_routing = libri`
@@ -96,10 +97,15 @@ Use the following alignment for spin-sensitive GW workflows:
 ### Molecule
 
 - Set `KPT` to `1 1 1`
-- Add `gamma_only 1` to `INPUT_scf`
+- Treat `gamma_only` as route-aware rather than a universal hard rule
 - Use official ABACUS input names from the ABACUS input reference
 - Do not run `pyatb`
 - Set `replace_w_head = f`
+- For the tested smoke path `molecule + GW + no NSCF + no pyatb + no shrink`, prefer the dedicated route template under `templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/`
+- Keep `out_mat_xc 1`, `exx_use_ewald 1`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, and `cs_inv_thr 1e-5`
+- Do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` for that short route
+- Copy `OUT.ABACUS/vxc_out.dat` into the working directory as `vxc_out` before LibRPA
+- Stop before LibRPA unless at least one `coulomb_mat_*.txt` file exists
 
 ### Solid
 
@@ -112,7 +118,11 @@ Use the following alignment for spin-sensitive GW workflows:
 
 ## Default Shrink Strategy
 
-Use shrink by default:
+Use shrink by default for the generic periodic GW lane.
+
+Do not force shrink onto the tested short molecular GW smoke route; that route uses `use_shrink_abfs = f` with `exx_pca_threshold 1e-6`.
+
+Generic shrink lane:
 
 - `use_shrink_abfs = t`
 - `rpa 1`
@@ -163,8 +173,8 @@ Only `LibRPA` needs an explicit status judgment in the normal workflow. `pyatb` 
 ### LibRPA success
 
 - `librpa_para_nprocs_*_myid_0.out` exists
-- the rank-0 output contains `Timer stop:  total.`
-- at least one `GW_band_spin_*.dat` file exists
+- either the rank-0 output contains `Timer stop:  total.` and at least one `GW_band_spin_*.dat` file exists
+- or the rank-0 output contains `libRPA finished successfully` and the molecular GW outputs `band_out`, `vxc_out`, and `coulomb_mat_*.txt` exist
 
 ### LibRPA still running
 

@@ -57,6 +57,24 @@
   applies_to:
     mode: gw
 
+- id: librpa-gw-molecule-short-route-205
+  scene: Molecular GW smoke route without NSCF or pyatb
+  symptom: Periodic GW defaults leave the short molecular route with the wrong handoff settings
+  root_cause: The tested molecular path needs direct SCF -> LibRPA handoff and does not use the periodic W-head treatment or shrink lane by default
+  fix:
+    - `task = g0w0_band`
+    - `option_dielect_func = 3`
+    - `replace_w_head = f`
+    - `use_soc = 0` unless the chosen spin/SOC route overrides it
+    - `use_shrink_abfs = f`
+    - Keep the shared GW thresholds and `output_gw_sigc_mat_rf = t`
+  verify:
+    - Confirm the route is molecular GW without NSCF/pyatb
+    - Confirm `replace_w_head = f` and `use_shrink_abfs = f` are present in `librpa.in`
+  applies_to:
+    mode: gw
+    system_type: molecule
+
 - id: librpa-rpa-short-route-204
   scene: RPA calculation route
   symptom: Need the shorter RPA path without GW preprocessing

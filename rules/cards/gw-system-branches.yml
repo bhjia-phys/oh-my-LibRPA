@@ -1,18 +1,19 @@
 - id: gw-molecule-branch-301
   scene: User requests GW for a molecular system
   symptom: Need a molecule-specific workflow path instead of the solid-state default chain
-  root_cause: Molecules use a Gamma-only path and do not need the head-function DF stage
+  root_cause: Molecules skip the DF/pyatb stage, and some builds need route-aware handling of `gamma_only`
   fix:
     - Set `KPT` to `1 1 1`
-    - Add `gamma_only 1` to `INPUT_scf`
+    - Treat `gamma_only` as a route-aware option instead of a universal hard rule
     - Use official ABACUS input parameter names from the ABACUS input documentation
     - Do not run `pyatb`
     - Set `replace_w_head = f` in `librpa.in`
+    - For the tested short smoke route, prefer `templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/`
   verify:
     - Confirm `KPT` is `1 1 1`
-    - Confirm `gamma_only 1` exists in `INPUT_scf`
     - Confirm `replace_w_head = f` in `librpa.in`
     - Confirm no `pyatb_librpa_df` stage is inserted into the workflow
+    - Confirm the selected output set is internally consistent with the chosen `gamma_only` setting
   applies_to:
     mode: gw
     system_type: molecule
