@@ -9,13 +9,6 @@ Install and configure oh-my-LibRPA by following:
 https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/installation.md
 ```
 
-If you are on Windows and want the AI to use Git Bash instead of WSL, use the Windows-specific guide:
-
-```text
-On Windows, use Git Bash instead of WSL, and follow:
-https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/windows-git-bash.md
-```
-
 Or run one command:
 
 ```bash
@@ -26,6 +19,12 @@ To update later without repeating workspace setup, run:
 
 ```bash
 ~/.openclaw/workspace/oh-my-librpa/update.sh
+```
+
+If you want an AI to handle the update on Windows, give it this one-line prompt:
+
+```text
+On Windows, use Git Bash instead of WSL, and follow: https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/windows-git-bash.md
 ```
 
 Or fetch the latest updater directly:

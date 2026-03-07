@@ -13,13 +13,6 @@ Install and configure oh-my-LibRPA by following:
 https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/installation.md
 ```
 
-For Windows users with Git Bash, use this instead:
-
-```text
-On Windows, use Git Bash instead of WSL, and follow:
-https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/windows-git-bash.md
-```
-
 ## One-Command Install (Human)
 
 ```bash
@@ -36,6 +29,12 @@ bash install.sh
 ## Update
 
 After the first install, do not repeat the full install flow unless you are repairing a broken setup.
+
+If you want to ask an AI to update on Windows, give it this one-line prompt:
+
+```text
+On Windows, use Git Bash instead of WSL, and follow: https://raw.githubusercontent.com/AroundPeking/oh-my-LibRPA/main/docs/guide/windows-git-bash.md
+```
 
 Use the in-place updater instead:
 
