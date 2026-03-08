@@ -72,7 +72,11 @@ The example shows:
 
 ### Example final result
 
-![Si GW band figure](docs/assets/si-gw-band-paper.png)
+<div align="center">
+  <img src="docs/assets/si-gw-band-paper.png" alt="Si GW band figure" width="860" />
+  <br />
+  <sub>Paper-style GW band figure generated from a chat-driven periodic GW workflow.</sub>
+</div>
 
 ## Current MVP Scope
 
