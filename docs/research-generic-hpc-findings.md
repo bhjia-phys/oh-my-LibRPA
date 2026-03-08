@@ -1,9 +1,9 @@
-# ks_ghj_3 `~/gw` Sampling Results (Round 1)
+# Generic HPC `~/gw` Sampling Results (Round 1)
 
 ## Collection Metadata
 
 - Time: 2026-03-06 12:26 (GMT+8)
-- Source: `ks_ghj_3:~/gw`
+- Source: `hpc-login:~/gw`
 - Index file: `data/gw-index-20260306-122643.tsv`
 - Parameter snapshot: `data/param-snapshots/params-20260306-122643.txt`
 

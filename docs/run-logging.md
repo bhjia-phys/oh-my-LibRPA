@@ -127,7 +127,7 @@ scripts/run_gw_workflow.sh \
   --run-id 2026-03-06-2307 \
   --run-dir /path/to/calc \
   --compute-location server \
-  --ssh-target ks_ghj_3 \
+  --ssh-target hpc-login \
   --task-label Bi2Se3-dojov4-fr \
   --system-type solid \
   --task g0w0_band \
@@ -150,7 +150,7 @@ scripts/run_rpa_workflow.sh \
   --run-id 2026-03-06-2307 \
   --run-dir /path/to/calc \
   --compute-location server \
-  --ssh-target ks_ghj_3 \
+  --ssh-target hpc-login \
   --task-label Si-rpa-smoke \
   --system-type solid \
   --task rpa \

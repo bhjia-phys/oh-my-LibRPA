@@ -24,14 +24,15 @@ Execution order depends on system type:
 - Verify `librpa.in` uses matching `use_soc = 0/1`.
 - Verify `librpa.in` is generated from the same ABACUS workflow chain.
 - Verify the run is in a fresh directory to avoid stale-output contamination.
-- Prefer server-side scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when available.
+- Prefer a user-curated server-side reference bundle when available.
 - When generating a GW case from templates, materialize the route first with `oh-my-librpa/scripts/materialize_gw_template.sh` and treat `.oh-my-librpa-route.env` as the authoritative route record.
 - Recognize the canonical file bundle from server examples:
   - `INPUT`, `INPUT_scf`, `INPUT_nscf`
   - `KPT`, `KPT_scf`, `KPT_nscf`
   - `STRU`, `geometry.in`, `librpa.in`
-  - `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`
+  - `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`, `output_librpa.py`, `plot_gw_band_paper.py`
   - `.orb`, `.abfs`, `.upf`
+- For server runs, prefer a materialized host profile (`env.sh`) with explicit `python3_exec`, executable paths, and launcher paths rather than relying on interactive `~/.bashrc` behavior.
 
 ## Default `librpa.in` Preset for GW
 
@@ -112,6 +113,8 @@ Use the following alignment for spin-sensitive GW workflows:
 
 - Ask the user how many k-points to use in `KPT`; default to `8 8 8`
 - `KPT_nscf` must be provided by the user
+- Materialize `env.sh` from a host profile before batch submission so `python3_exec`, `abacus_work`, `librpa_work`, and the MPI launcher are explicit
+- If launcher or python behavior is uncertain on compute nodes, materialize and run a batch-node probe before the real job
 - After SCF, run `pyatb` to generate the `pyatb_librpa_df` directory
 - Then run NSCF
 - Then run `preprocess_abacus_for_librpa_band.py`
@@ -187,6 +190,15 @@ Only `LibRPA` needs an explicit status judgment in the normal workflow. `pyatb` 
 
 - there is no final `Timer stop:  total.` marker
 - and the rank-0 output file is no longer growing, or the output file is missing
+
+## Periodic GW Plotting
+
+For periodic GW post-processing, prefer the bundled `plot_gw_band_paper.py` helper.
+
+- Inputs: `GW_band_spin_*`, `band_out`, `band_kpath_info`, `KPT_nscf`
+- Outputs: a paper-style PNG, a PDF, and a text summary
+- Shift energies by the GW VBM
+- Restrict CBM search to the first few conduction bands near the gap to avoid high-energy spurious roots contaminating the reported gap and the main figure
 
 ## Output Requirement
 

@@ -1,6 +1,46 @@
-#module purge
-#conda activate ghj_pyatb
-export LD_PRELOAD=/mnt/sg001/opt/intel/oneapi2024/mkl/2024.0/lib/libmkl_avx512.so.2
-#export OMP_NUM_THREADS=20
+#!/usr/bin/env bash
+set -eo pipefail
 
-mpirun -np 1 python get_diel.py
+if [[ -f ./env.sh ]]; then
+  # shellcheck disable=SC1091
+  source ./env.sh
+fi
+set -u
+
+python3_exec="${python3_exec:-${OH_MY_LIBRPA_PYTHON3_EXEC:-python3}}"
+mpirun_exec="${mpirun_exec:-${OH_MY_LIBRPA_MPI_LAUNCHER_CMD:-mpirun}}"
+pyatb_mpi_ranks="${pyatb_mpi_ranks:-1}"
+
+require_exec() {
+  local path="$1"
+  local label="$2"
+
+  if [[ "$path" == */* ]]; then
+    [[ -x "$path" ]] || { echo "Missing executable for $label: $path" >&2; exit 1; }
+    return 0
+  fi
+
+  command -v "$path" >/dev/null 2>&1 || { echo "Executable for $label not found in PATH: $path" >&2; exit 1; }
+}
+
+require_file() {
+  local path="$1"
+  [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }
+}
+
+require_glob() {
+  local pattern="$1"
+  compgen -G "$pattern" >/dev/null || { echo "Missing required files matching: $pattern" >&2; exit 1; }
+}
+
+require_exec "$python3_exec" python3_exec
+require_exec "$mpirun_exec" mpirun_exec
+require_file get_diel.py
+require_file output_librpa.py
+
+if [[ -n "${OH_MY_LIBRPA_LD_PRELOAD:-}" ]]; then
+  export LD_PRELOAD="$OH_MY_LIBRPA_LD_PRELOAD"
+fi
+"$mpirun_exec" -np "$pyatb_mpi_ranks" "$python3_exec" get_diel.py
+require_file band_out
+require_glob 'KS_eigenvector_*.dat'

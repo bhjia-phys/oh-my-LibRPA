@@ -30,7 +30,7 @@
     - Run `NSCF`
     - Run `preprocess_abacus_for_librpa_band.py`
     - Run `LibRPA`
-    - Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template`
+    - Prefer a user-curated server-side reference bundle when available
   verify:
     - Confirm the chosen `KPT` mesh in `KPT`
     - Confirm `KPT_nscf` is provided by the user

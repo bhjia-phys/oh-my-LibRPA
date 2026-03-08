@@ -1,0 +1,16 @@
+- id: periodic-gw-plotting-902
+  scene: User wants a usable periodic GW band figure after a successful run
+  symptom: Blind global CBM searches or full-band plots produce noisy gaps and unreadable figures
+  root_cause: High-energy spurious roots can contaminate a naive global conduction-band minimum search
+  fix:
+    - Use `plot_gw_band_paper.py` with `GW_band_spin_*`, `band_out`, `band_kpath_info`, and `KPT_nscf`
+    - Shift energies to the GW VBM
+    - Restrict CBM search to the first few conduction bands near the gap
+    - Plot only a compact near-gap manifold for the default paper-style output
+    - Export both PNG and PDF plus a text summary
+  verify:
+    - Confirm PNG, PDF, and summary files exist
+    - Confirm the summary reports the restricted near-gap GW gap
+  applies_to:
+    mode: gw
+    system_type: solid

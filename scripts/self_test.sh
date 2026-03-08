@@ -60,7 +60,11 @@ for path in \
   "$installed_root/update.sh" \
   "$installed_root/rules/cards/librpa-default-presets.yml" \
   "$installed_root/rules/cards/molecular-gw-short-route.yml" \
+  "$installed_root/rules/cards/periodic-gw-plotting.yml" \
+  "$installed_root/rules/cards/server-profile-runtime.yml" \
+  "$installed_root/registry/host-profiles/generic-hpc-example.env" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \
+  "$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py" \
   "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/INPUT_scf.template" \
   "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/librpa.in.template" \
   "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/KPT_scf.template" \
@@ -82,7 +86,9 @@ for script in \
   "$installed_root/update.sh" \
   "$installed_root/scripts/check_consistency.sh" \
   "$installed_root/scripts/intake_preflight.sh" \
+  "$installed_root/scripts/materialize_batch_probe.sh" \
   "$installed_root/scripts/materialize_gw_template.sh" \
+  "$installed_root/scripts/materialize_server_profile.sh" \
   "$installed_root/scripts/report_stage.sh" \
   "$installed_root/scripts/run_gw_workflow.sh" \
   "$installed_root/scripts/run_rpa_workflow.sh" \
@@ -213,6 +219,101 @@ if "$installed_root/scripts/check_consistency.sh" "$case_gw" --mode gw --system-
   pass 'check_consistency.sh passed on the materialized molecular GW short route'
 else
   fail 'check_consistency.sh failed on the materialized molecular GW short route'
+fi
+
+case_server="$tmp_dir/server-profile"
+mkdir -p "$case_server"
+if "$installed_root/scripts/materialize_server_profile.sh" --case-dir "$case_server" --profile generic-hpc-example >/dev/null 2>&1; then
+  pass 'materialize_server_profile.sh wrote env.sh from the generic example profile'
+else
+  fail 'materialize_server_profile.sh failed on the generic example profile'
+fi
+
+if [[ -f "$case_server/env.sh" && -f "$case_server/.oh-my-librpa-host-profile.env" ]] \
+  && grep -q 'python3_exec=' "$case_server/env.sh" \
+  && grep -q 'mpirun_exec=' "$case_server/env.sh"; then
+  pass 'materialized server profile records explicit python3 and launcher settings'
+else
+  fail 'materialized server profile is missing explicit python3 or launcher settings'
+fi
+
+if "$installed_root/scripts/materialize_batch_probe.sh" --case-dir "$case_server" --profile generic-hpc-example --force >/dev/null 2>&1 \
+  && [[ -f "$case_server/probe_batch.sh" ]]; then
+  pass 'materialize_batch_probe.sh wrote a batch-node probe script'
+else
+  fail 'materialize_batch_probe.sh failed to write a batch-node probe script'
+fi
+
+if grep -q 'python3_exec' "$installed_root/templates/abacus-librpa-gw/template/run_abacus.sh" \
+  && grep -q 'resolved-runtime.env' "$installed_root/templates/abacus-librpa-gw/template/run_abacus.sh" \
+  && ! grep -qE '(^|[[:space:]])python preprocess_abacus_for_librpa_band.py' "$installed_root/templates/abacus-librpa-gw/template/run_abacus.sh"; then
+  pass 'periodic run_abacus.sh uses explicit runtime resolution and avoids bare python helpers'
+else
+  fail 'periodic run_abacus.sh still lacks explicit runtime resolution or still uses bare python helpers'
+fi
+
+if grep -q 'python3_exec' "$installed_root/templates/abacus-librpa-gw/template/perform.sh" \
+  && grep -q 'output_librpa.py' "$installed_root/templates/abacus-librpa-gw/template/perform.sh" \
+  && ! grep -qE '(^|[[:space:]])python get_diel.py' "$installed_root/templates/abacus-librpa-gw/template/perform.sh"; then
+  pass 'perform.sh uses explicit python3 resolution and checks helper dependencies'
+else
+  fail 'perform.sh still lacks explicit python3 resolution or helper checks'
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  if python3 -m py_compile "$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py"; then
+    pass 'plot_gw_band_paper.py passes python bytecode compilation'
+  else
+    fail 'plot_gw_band_paper.py failed python bytecode compilation'
+  fi
+else
+  pass 'python3 not available for plot_gw_band_paper.py bytecode compilation; skipped'
+fi
+
+plot_case="$tmp_dir/plot-case"
+mkdir -p "$plot_case"
+cat <<'EOF' > "$plot_case/GW_band_spin_1.dat"
+1 0.0 0.0 0.0 0.0 5.00 0.0 6.20
+2 0.5 0.0 0.0 0.0 5.10 0.0 6.35
+3 1.0 0.0 0.0 0.0 5.20 0.0 6.40
+EOF
+cat <<'EOF' > "$plot_case/band_out"
+1 2
+1 1.0 0 0
+2 0.0 0 0
+EOF
+cat <<'EOF' > "$plot_case/band_kpath_info"
+nk = 3
+0.0 0.0 0.0
+0.5 0.0 0.0
+1.0 0.0 0.0
+EOF
+cat <<'EOF' > "$plot_case/KPT_nscf"
+K_POINTS
+2
+Line
+0.0 0.0 0.0 2 # G
+0.5 0.0 0.0 1 # X
+EOF
+
+if command -v python3 >/dev/null 2>&1; then
+  if python3 - <<'EOF' >/dev/null 2>&1
+import importlib
+importlib.import_module('numpy')
+importlib.import_module('matplotlib')
+EOF
+  then
+    if python3 "$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py" --run-dir "$plot_case" --prefix test_gw_band --valence-bands 1 --conduction-bands 1 --cbm-search-window 1 >/dev/null 2>&1 \
+      && [[ -f "$plot_case/plots/test_gw_band.png" && -f "$plot_case/plots/test_gw_band.pdf" && -f "$plot_case/plots/test_gw_band_summary.txt" ]]; then
+      pass 'plot_gw_band_paper.py generated PNG/PDF/summary outputs on a synthetic periodic GW case'
+    else
+      fail 'plot_gw_band_paper.py failed on a synthetic periodic GW case'
+    fi
+  else
+    pass 'numpy/matplotlib not available for plot_gw_band_paper.py runtime smoke test; skipped'
+  fi
+else
+  pass 'python3 not available for plot_gw_band_paper.py runtime smoke test; skipped'
 fi
 
 echo "SUMMARY: pass=$pass_count fail=$fail_count"

@@ -1,9 +1,9 @@
-# Data Source Research Plan: ks_ghj_3 `~/gw`
+# Data Source Research Plan: generic HPC `~/gw`
 
 ## Current Status
 
-- Direct connection from this machine to `ks_ghj_3 (10.254.253.3:22)` was timing out earlier.
-- Jumping through `Fisherd` also timed out in the earlier check.
+- Direct connection to the target login node may fail before VPN / bastion / routing is ready.
+- Jump-host access may also fail until the site network path is confirmed.
 
 ## Minimal Collection Tasks (when connected)
 
@@ -30,5 +30,5 @@
 ## Quick Command (when connected)
 
 ```bash
-bash scripts/collect_gw_inventory.sh ks_ghj_3 ~/gw
+bash scripts/collect_gw_inventory.sh hpc-login ~/gw
 ```

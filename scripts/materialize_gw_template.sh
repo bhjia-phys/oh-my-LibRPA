@@ -177,6 +177,7 @@ if [[ "$route_id" == "molecule-gw-no-nscf-no-pyatb-no-shrink" ]]; then
 fi
 
 metadata_file="$case_dir/.oh-my-librpa-route.env"
+workflow_helper_bundle='get_diel.py;perform.sh;preprocess_abacus_for_librpa_band.py;run_abacus.sh;output_librpa.py;plot_gw_band_paper.py'
 {
   printf 'OH_MY_LIBRPA_MODE=%q\n' 'gw'
   printf 'OH_MY_LIBRPA_ROUTE_ID=%q\n' "$route_id"
@@ -185,6 +186,7 @@ metadata_file="$case_dir/.oh-my-librpa-route.env"
   printf 'OH_MY_LIBRPA_NEEDS_PYATB=%q\n' "$needs_pyatb"
   printf 'OH_MY_LIBRPA_USE_SHRINK_ABFS=%q\n' "$use_shrink_abfs"
   printf 'OH_MY_LIBRPA_REFERENCE_TEMPLATE=%q\n' "$reference_template"
+  printf 'OH_MY_LIBRPA_WORKFLOW_HELPER_BUNDLE=%q\n' "$workflow_helper_bundle"
   printf 'OH_MY_LIBRPA_ROUTE_NOTE=%q\n' "$route_note"
 } > "$metadata_file"
 

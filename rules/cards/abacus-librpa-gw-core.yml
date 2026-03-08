@@ -6,7 +6,7 @@
     - Regenerate librpa inputs from the same ABACUS workflow outputs
     - Run in a fresh directory
     - Remove stale output artifacts before rerun
-    - Prefer reference scripts and inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` on the server
+    - Prefer a user-curated server-side reference bundle when available
   verify:
     - Confirm source paths for SCF/DF/NSCF are from one run chain
     - Re-run minimal smoke with nfreq=16

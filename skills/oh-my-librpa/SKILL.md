@@ -29,7 +29,7 @@ Classify user-provided files into one of these groups:
 
 - `structure files`: `STRU`, `cif`, `xyz`, `geometry.in`
 - `input bundle`: `INPUT`, `INPUT_scf`, `INPUT_nscf`, `KPT`, `KPT_scf`, `KPT_nscf`, `librpa.in`
-- `workflow scripts`: `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`
+- `workflow scripts`: `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`, `output_librpa.py`, `plot_gw_band_paper.py`, `env.sh`, `probe_batch.sh`
 - `basis/pseudopotential assets`: `.orb`, `.abfs`, `.upf`
 - `logs/results`: output files, error logs, `band_out`, generated band data
 - `archives`: `zip`, `tar.gz`
@@ -44,12 +44,12 @@ If the user provides files:
 
 When the user provides `.abfs` files, treat them as direct candidates for `ABFS_ORBITAL` entries in `STRU`.
 
-Canonical server-side template bundle is under `/mnt/sg001/home/ks_iopcas_ghj/gw/template` and includes:
+If the user already has a server-side reference bundle, treat that bundle as authoritative. A typical bundle includes:
 
 - `INPUT`, `INPUT_scf`, `INPUT_nscf`
 - `KPT`, `KPT_scf`, `KPT_nscf`
 - `STRU`, `geometry.in`, `librpa.in`
-- `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`
+- `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`, `output_librpa.py`, `plot_gw_band_paper.py`
 
 ## Mandatory Compute-Location Handshake
 
@@ -70,6 +70,7 @@ Then proceed as follows:
   - If VPN is needed, wait for user confirmation that VPN is enabled.
   - After confirmation, the AI attempts server login automatically.
   - If login fails, report exact failure class (`timeout`, `auth`, `host resolution`, etc.) and provide minimal repair actions.
+  - Resolve or ask for a host profile before submission; do not silently trust interactive shell defaults for `python3`, MPI launcher, or executable paths.
 
 ## Execution Protocol (after location is confirmed)
 
@@ -153,10 +154,15 @@ Then proceed as follows:
      - do not require `KPT_nscf`
      - run `SCF -> LibRPA`
 14. If shrink is enabled, require the user to specify `ABFS_ORBITAL` in `STRU` before continuing. Do not force shrink on the tested short molecular GW smoke route; that route uses `use_shrink_abfs = f`.
-15. Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when working on the server, but for `molecule + GW + no NSCF + no pyatb + no shrink`, switch routes by calling `oh-my-librpa/scripts/materialize_gw_template.sh` rather than copying the generic template manually.
-16. Run smoke-first setup.
-17. Run the installed `oh-my-librpa/scripts/check_consistency.sh <case_dir> --mode <gw|rpa> --system-type <molecule|solid|2D>` helper before remote execution so the static checks follow the selected route instead of assuming every case needs NSCF.
-18. Validate outputs using stage-specific success criteria before escalation.
+15. Prefer a user-curated server-side reference bundle when one already exists, but for `molecule + GW + no NSCF + no pyatb + no shrink`, switch routes by calling `oh-my-librpa/scripts/materialize_gw_template.sh` rather than copying the generic template manually.
+16. For server compute, materialize explicit runtime config before submission:
+   - Use `oh-my-librpa/scripts/materialize_server_profile.sh --case-dir <case_dir> --profile <name-or-path>` to write `env.sh`
+   - Use `oh-my-librpa/scripts/materialize_batch_probe.sh --case-dir <case_dir> --profile <name-or-path>` when launcher / python3 / PATH behavior still needs a batch-node probe
+   - Prefer explicit `python3_exec`, `abacus_work`, `librpa_work`, and launcher paths over `source ~/.bashrc` guesses
+   - For the detailed profile format and workflow, read `oh-my-librpa/references/server-profiles.md`
+17. Run smoke-first setup.
+18. Run the installed `oh-my-librpa/scripts/check_consistency.sh <case_dir> --mode <gw|rpa> --system-type <molecule|solid|2D>` helper before remote execution so the static checks follow the selected route instead of assuming every case needs NSCF.
+19. Validate outputs using stage-specific success criteria before escalation.
 19. For a full GW chain, judge stages with generic markers. Only `LibRPA` needs explicit status monitoring; `pyatb` and `preprocess` usually only need completion checks:
    - SCF: completed `running_scf.log` + `ABACUS-CHARGE-DENSITY.restart`
    - pyatb: `pyatb_librpa_df/` + `band_out` + `KS_eigenvector_*.dat`
@@ -168,7 +174,11 @@ Then proceed as follows:
 20. For GW execution, prefer the installed `run_gw_workflow.sh` runner so stage execution, route-aware skipping, verification, and reporting stay in one flow.
 21. For a full RPA execution path, prefer the installed `run_rpa_workflow.sh` runner so stage execution, verification, and reporting stay in one flow.
 22. After each verified stage update, call the installed `report_stage.sh` helper to write both Markdown logs: the run-directory `run-report.md` and the archived copy under `~/.openclaw/workspace/librpa/oh-my-librpa/`.
-23. Send the script stdout to the user as the stage summary before moving to the next critical stage.
+23. For periodic GW post-processing, prefer the bundled `plot_gw_band_paper.py` helper:
+   - Inputs: `GW_band_spin_*`, `band_out`, `band_kpath_info`, `KPT_nscf`
+   - Outputs: near-gap paper-style PNG/PDF plus a text summary
+   - Use the restricted near-gap CBM search instead of a blind global conduction-band minimum search
+24. Send the script stdout to the user as the stage summary before moving to the next critical stage.
 
 ## Routing Rules
 

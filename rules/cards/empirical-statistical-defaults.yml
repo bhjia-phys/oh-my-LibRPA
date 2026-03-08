@@ -10,7 +10,7 @@
     - Smoke run completes and key outputs are generated
     - First accuracy-upgrade run keeps numerical behavior stable
   applies_to:
-    source: ks_ghj_3 ~/gw statistical scan
+    source: generic HPC GW inventory sample
     observed:
       nfreq_16_count: 176
 
@@ -33,7 +33,7 @@
     - Static checker passes all required coupled keys
     - Short smoke run succeeds before scaling up
   applies_to:
-    source: ks_ghj_3 ~/gw statistical scan
+    source: generic HPC GW inventory sample
     observed:
       use_shrink_abfs_t_count: 156
       exx_pca_threshold_10_count: 367

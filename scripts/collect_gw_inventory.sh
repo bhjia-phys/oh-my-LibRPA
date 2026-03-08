@@ -4,7 +4,7 @@ set -euo pipefail
 # Usage:
 #   bash scripts/collect_gw_inventory.sh <ssh_host> <remote_gw_dir>
 # Example:
-#   bash scripts/collect_gw_inventory.sh ks_ghj_3 ~/gw
+#   bash scripts/collect_gw_inventory.sh hpc-login ~/gw
 
 host="${1:-}"
 remote_dir="${2:-}"
