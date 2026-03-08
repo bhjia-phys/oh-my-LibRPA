@@ -1,57 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 180" width="760" height="180" role="img" aria-label="oh-my-LibRPA wordmark">
   <defs>
-    <linearGradient id="rocketBodyWord" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="rocket-body-sm" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#26A69A"/>
       <stop offset="100%" stop-color="#004D40"/>
     </linearGradient>
-    <linearGradient id="rocketFlameWord" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#80CBC4"/>
-      <stop offset="100%" stop-color="#26A69A"/>
+    <linearGradient id="rocket-flame-sm" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#DFFAF5"/>
+      <stop offset="60%" stop-color="#26A69A"/>
+      <stop offset="100%" stop-color="#00796B"/>
     </linearGradient>
     <linearGradient id="oml-text-main" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#26A69A"/>
       <stop offset="100%" stop-color="#00796B"/>
     </linearGradient>
-    <g id="bubbleWord" fill="none" stroke-linecap="round">
-      <path d="M-8,0 A10,10 0 0,1 8,0 A10,10 0 0,1 -8,0" stroke="#00796B" stroke-width="3"/>
-      <path d="M-8,0 A10,10 0 0,0 8,0 A10,10 0 0,0 -8,0" stroke="#004D40" stroke-width="3"/>
+    <g id="bubble-sm" fill="none" stroke-linecap="round" stroke-width="3.2">
+      <path d="M-10,0 A12,12 0 0,1 10,0 A12,12 0 0,1 -10,0" stroke="#00796B"/>
+      <path d="M-10,0 A12,12 0 0,0 10,0 A12,12 0 0,0 -10,0" stroke="#004D40"/>
     </g>
   </defs>
 
-  <g transform="translate(8,8)">
-    <circle cx="76" cy="82" r="48" fill="none" stroke="#DCEBE7" stroke-width="3.2" stroke-dasharray="5 8"/>
-    <circle cx="76" cy="82" r="41" fill="none" stroke="#F1F7F5" stroke-width="1.5"/>
+  <g transform="translate(96 88)">
+    <circle cx="0" cy="0" r="54" fill="none" stroke="#CFEDE7" stroke-width="5.5" stroke-dasharray="5 9"/>
+    <circle cx="0" cy="0" r="38" fill="#FAFEFD" opacity="0.95"/>
 
-    <use href="#bubbleWord" transform="translate(76 34) rotate(0)" opacity="1.0"/>
-    <use href="#bubbleWord" transform="translate(110 48) rotate(45)" opacity="1.0"/>
-    <use href="#bubbleWord" transform="translate(124 82) rotate(90)" opacity="1.0"/>
-    <use href="#bubbleWord" transform="translate(110 116) rotate(135)" opacity="0.92"/>
-    <use href="#bubbleWord" transform="translate(76 130) rotate(180)" opacity="0.82"/>
-    <use href="#bubbleWord" transform="translate(42 116) rotate(225)" opacity="0.68"/>
-    <use href="#bubbleWord" transform="translate(28 82) rotate(270)" opacity="0.52"/>
-    <use href="#bubbleWord" transform="translate(42 48) rotate(315)" opacity="0.38"/>
+    <use href="#bubble-sm" transform="translate(0 -58) scale(1.02)"/>
+    <use href="#bubble-sm" transform="translate(32 -48) rotate(28) scale(0.96)"/>
+    <use href="#bubble-sm" transform="translate(54 -14) rotate(64) scale(0.88)"/>
+    <use href="#bubble-sm" transform="translate(52 24) rotate(98) scale(0.80)"/>
+    <use href="#bubble-sm" transform="translate(28 50) rotate(132) scale(0.72)" opacity="0.9"/>
+    <use href="#bubble-sm" transform="translate(-8 57) rotate(176) scale(0.62)" opacity="0.72"/>
+    <use href="#bubble-sm" transform="translate(-40 40) rotate(220) scale(0.52)" opacity="0.48"/>
+    <use href="#bubble-sm" transform="translate(-56 4) rotate(266) scale(0.42)" opacity="0.28"/>
 
-    <path d="M76 43
-             C90 52 100 73 100 95
-             V115
-             C100 135 90 152 76 163
-             C62 152 52 135 52 115
-             V95
-             C52 73 62 52 76 43 Z"
-          fill="url(#rocketBodyWord)"/>
-    <path d="M52 114 L35 131 L52 136 Z" fill="#00796B"/>
-    <path d="M100 114 L117 131 L100 136 Z" fill="#00796B"/>
-    <path d="M64 149 L76 139 L88 149 L76 160 Z" fill="#0A8F80" opacity="0.95"/>
-    <ellipse cx="76" cy="86" rx="11" ry="14" fill="#E7FAF6" stroke="#00796B" stroke-width="3"/>
-    <circle cx="76" cy="86" r="4.4" fill="#26A69A"/>
-    <path d="M76 161 C68 173 69 185 76 196 C83 185 84 173 76 161 Z" fill="url(#rocketFlameWord)"/>
+    <g transform="translate(0 0) rotate(10)">
+      <path d="M0 -38 C12 -30 20 -14 20 4 C20 20 12 34 0 42 C-12 34 -20 20 -20 4 C-20 -14 -12 -30 0 -38 Z" fill="url(#rocket-body-sm)"/>
+      <ellipse cx="0" cy="-6" rx="8" ry="10" fill="#E8FFFB" stroke="#00796B" stroke-width="2.3"/>
+      <path d="M-20 10 L-36 22 L-16 26 Z" fill="#26A69A"/>
+      <path d="M20 10 L36 22 L16 26 Z" fill="#00796B"/>
+      <path d="M-9 31 L-17 49 L-1 40 Z" fill="#26A69A"/>
+      <path d="M9 31 L17 49 L1 40 Z" fill="#00796B"/>
+      <path d="M0 40 C8 50 8 66 0 78 C-8 66 -8 50 0 40 Z" fill="url(#rocket-flame-sm)"/>
+      <path d="M0 48 C4 54 4 64 0 70 C-4 64 -4 54 0 48 Z" fill="#F6FFFD" opacity="0.92"/>
+    </g>
   </g>
 
   <g font-family="Inter, 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif">
-    <text x="170" y="103" font-size="56" font-weight="500" font-style="italic" letter-spacing="-1.1" fill="#5F6B72">oh-my-</text>
-    <text x="378" y="103" font-size="62" font-weight="500" letter-spacing="-1.4" fill="#26A69A">Lib</text>
-    <text x="492" y="103" font-size="62" font-weight="760" letter-spacing="-1.4" fill="url(#oml-text-main)">RPA</text>
-    <rect x="172" y="117" width="450" height="2.2" rx="1.1" fill="#D7E6E3"/>
-    <text x="172" y="147" font-size="17.5" font-weight="500" letter-spacing="2.5" fill="#7A8A90">CHAT-FIRST GW / RPA WORKFLOWS</text>
+    <text x="178" y="102" font-size="58" font-weight="500" font-style="italic" letter-spacing="-1.2" fill="#5F6B72">oh-my-</text>
+    <text x="390" y="102" font-size="64" font-weight="500" letter-spacing="-1.5" fill="#26A69A">Lib</text>
+    <text x="508" y="102" font-size="64" font-weight="780" letter-spacing="-1.5" fill="url(#oml-text-main)">RPA</text>
+    <rect x="180" y="116" width="456" height="2.2" rx="1.1" fill="#D7E6E3"/>
+    <text x="180" y="147" font-size="18" font-weight="500" letter-spacing="2.5" fill="#7A8A90">CHAT-FIRST GW / RPA WORKFLOWS</text>
   </g>
 </svg>
