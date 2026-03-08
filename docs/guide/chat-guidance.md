@@ -32,7 +32,7 @@ If executable paths are fixed for a given server, the guidance should still make
 A good periodic GW request can look like this:
 
 ```text
-Run a Si GW calculation on ks_ghj_3.
+Run a Si GW calculation on hpc-login.
 Use ~/gw/Si/AI/ as the source directory.
 The basis, ABFS, pseudopotential, and KPT_nscf are already there.
 Use lattice constant 5.431 Å.
@@ -88,7 +88,7 @@ Example:
 
 ```text
 Pre-submit summary
-- server: ks_ghj_3
+- server: hpc-login
 - fresh run directory: ~/gw/Si/AI/si_gw_k444_xxxxx
 - system: Si solid
 - lattice constant: 5.431 Å

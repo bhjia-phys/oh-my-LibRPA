@@ -13,7 +13,7 @@ It focuses on three things only:
 ## 1. User request
 
 ```text
-Run a Si GW calculation on ks_ghj_3.
+Run a Si GW calculation on hpc-login.
 Use ~/gw/Si/AI/ as the source directory.
 The basis, ABFS, pseudopotential, and KPT_nscf are already there.
 Use lattice constant 5.431 Å.
@@ -58,7 +58,7 @@ After preflight, the agent should summarize the final setup clearly.
 
 ```text
 Pre-submit summary
-- server: ks_ghj_3
+- server: hpc-login
 - fresh run directory: ~/gw/Si/AI/si_gw_k444_xxxxx
 - system: Si solid
 - lattice constant: 5.431 Å
