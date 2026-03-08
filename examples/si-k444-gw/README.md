@@ -1,192 +1,117 @@
-# Example: Si periodic GW on a remote server (`k = 4x4x4`)
+# Example: Si GW chat flow (`k = 4x4x4`)
 
-This is a realistic example of how `oh-my-librpa` should be used in chat.
+This example shows the **conversation form** that `oh-my-librpa` should encourage.
 
-It is intentionally not a toy example.
-It includes:
+It focuses on three things only:
 
-- a natural-language user request
-- the minimal clarifications that were actually needed
-- a real failure / repair loop on HPC
-- final GW success
-- postprocessing into a paper-style band plot
+1. what the user should say
+2. what the agent should ask back
+3. how the workflow should progress to a final result
 
 ---
 
-## 1. Initial user request
-
-A good real-world request looked like this:
+## 1. User request
 
 ```text
-在 ks_ghj_3 服务器上做一个 Si 的 k444 的 gw 计算，
-计算目录使用 ~/gw/Si/AI/,
-使用的基组、辅助基和赝势都在计算目录里面了，
-Si 的晶格常数设为 5.431 埃
+Run a Si GW calculation on ks_ghj_3.
+Use ~/gw/Si/AI/ as the source directory.
+The basis, ABFS, pseudopotential, and KPT_nscf are already there.
+Use lattice constant 5.431 Å.
+Use SCF KPT = 4 4 4.
+ABACUS executable: /path/to/abacus
+LibRPA executable: /path/to/chi0_main.exe
+Please check first and then submit.
 ```
 
-This is already good because it contains:
+This is a good first message because it already provides:
 
-- target server
-- target directory
-- system identity
-- important assets already prepared
-- lattice constant
-
----
-
-## 2. The right follow-up questions
-
-The agent did **not** need to ask 20 things.
-It only needed the missing pieces:
-
-1. is VPN already connected?
-2. is it allowed to create a fresh subdirectory?
-3. is `KPT_nscf` already present in `~/gw/Si/AI/`?
-
-This is the style we want:
-
-- ask little
-- ask the right things
-- unblock the workflow quickly
+- server
+- source directory
+- structure information
+- KPT mesh
+- `KPT_nscf` availability
+- basis / ABFS / pseudopotential availability
+- ABACUS executable path
+- LibRPA executable path
+- desired execution style
 
 ---
 
-## 3. What the workflow should do next
+## 2. Agent follow-up
 
-Once those answers are confirmed, the workflow should:
+The agent should ask only for what is still missing.
+
+A good follow-up can be this short:
+
+```text
+Before I proceed, please confirm:
+1. Is VPN / remote access already ready?
+2. May I create a fresh run subdirectory?
+3. Are those ABACUS and LibRPA executable paths final for this run?
+```
+
+---
+
+## 3. Pre-submit summary
+
+After preflight, the agent should summarize the final setup clearly.
+
+```text
+Pre-submit summary
+- server: ks_ghj_3
+- fresh run directory: ~/gw/Si/AI/si_gw_k444_xxxxx
+- system: Si solid
+- lattice constant: 5.431 Å
+- KPT: 4 4 4
+- KPT_nscf: user-provided
+- ABACUS executable: /path/to/abacus
+- LibRPA executable: /path/to/chi0_main.exe
+- task: g0w0_band
+- nfreq: 16
+
+If this looks right, I will submit.
+```
+
+---
+
+## 4. Stage-by-stage flow
+
+The expected workflow is:
 
 1. connect to the remote machine
-2. inspect the directory contents
-3. create a **fresh** run directory
-4. materialize the workflow there
-5. run intake / consistency checks
-6. report key parameters back to the user
-7. submit only after confirmation
+2. inspect the source directory
+3. create a fresh run directory
+4. run preflight / consistency checks
+5. submit the job
+6. report progress stage by stage
 
-For this case, the final successful run directory was:
+A concise progress update should always use:
+
+- what was done
+- what was observed
+- what is next
+
+---
+
+## 5. Final user request for plotting
+
+After the calculation succeeds, the user should be able to say:
 
 ```text
-/mnt/sg001/home/ks_iopcas_ghj/gw/Si/AI/si_gw_k444_fixenv3_20260308_141111
+Plot the GW band structure from GW_band_spin_* and the band path.
+Use Python.
+Make it look like a paper figure.
 ```
 
----
-
-## 4. What went wrong in reality
-
-This case is useful because several real HPC problems showed up.
-
-### Problem A: executable paths were not explicitly confirmed
-
-The template paths happened to be correct, but that was luck.
-A mature workflow should not rely on luck.
-
-### Problem B: batch environment did not match interactive shell
-
-The batch job did not automatically inherit the expected runtime environment.
-
-### Problem C: `python` vs `python3`
-
-The compute nodes had `/usr/bin/python` (python2), but no system `python3`.
-The real Python 3 was:
-
-```text
-/mnt/sg001/opt/anaconda3/2022.10/bin/python3
-```
-
-### Problem D: `srun` was the wrong launcher for this host profile
-
-A direct `srun` route produced PMI2 errors.
-A small probe showed that `mpirun` was the correct launcher for this machine.
-
-### Problem E: fail-fast was missing in the early script
-
-When the first stage failed, the script still tried to continue, which polluted the logs.
+That should be enough for the agent to continue.
 
 ---
 
-## 5. What the successful repair looked like
+## 6. Example final result
 
-The eventual successful workflow did four important things:
+The final result should not just be numbers or logs.
+It should also include a clean figure.
 
-1. explicit batch environment initialization
-2. explicit `python3` path
-3. explicit `mpirun` launcher
-4. fail-fast behavior
+![Si GW band figure](../../docs/assets/si-gw-band-paper.png)
 
-After those repairs, the job ran successfully:
-
-- **job id**: `867184`
-- **state**: `COMPLETED`
-- **elapsed**: `00:34:41`
-
-Success markers included:
-
-- SCF converged
-- `OUT.ABACUS/vxc_out.dat` present
-- `band_out`, `KS_eigenvector_*`, `coulomb_cut_*` present
-- NSCF succeeded
-- preprocess succeeded
-- `GW_band_spin_1.dat` generated
-
----
-
-## 6. What the user should be able to say next
-
-The next prompt was also natural language:
-
-```text
-根据输出的 GW_band_spin_* 和能带路径用 python 画能带图，要求论文画风，清晰好看
-```
-
-A good `oh-my-librpa` should treat this as part of the workflow, not as an unrelated manual task.
-
-It should know to use:
-
-- `GW_band_spin_*`
-- `band_out`
-- `band_kpath_info`
-- `KPT_nscf`
-
-and generate:
-
-- paper-style PNG
-- paper-style PDF
-- a reusable plotting script
-
----
-
-## 7. What this example should teach the project
-
-This case should influence the project at three levels.
-
-### README level
-
-Show users what a good natural-language request looks like.
-
-### Guide level
-
-Explain the expected conversation flow:
-
-- request
-- clarification
-- preflight
-- submit
-- stage reports
-- postprocessing
-
-### Rule-card level
-
-Teach the agent:
-
-- what to ask for periodic GW intake
-- what not to guess blindly
-- how to react when batch environment and login shell differ
-
----
-
-## 8. One-sentence takeaway
-
-A strong `oh-my-librpa` user experience is not just “generate inputs”.
-It is:
-
-> natural-language request → minimal clarification → stable remote execution → durable stage reporting → clean postprocessing
+This figure is an example of the expected final presentation quality for a successful periodic GW workflow.
