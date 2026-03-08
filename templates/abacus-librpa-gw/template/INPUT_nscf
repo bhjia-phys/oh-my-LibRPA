@@ -1,4 +1,6 @@
 INPUT_PARAMETERS
+# Baseline template: periodic GW lane with NSCF enabled.
+# Do not keep this file in the short molecular GW route.
 #Parameters	(General)
 pseudo_dir		./
 orbital_dir		./

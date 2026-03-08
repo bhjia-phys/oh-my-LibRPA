@@ -8,7 +8,7 @@
     - Use official ABACUS input parameter names from the ABACUS input documentation
     - Do not run `pyatb`
     - Set `replace_w_head = f` in `librpa.in`
-    - For the tested short smoke route, prefer `templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/`
+    - Materialize the tested short smoke route with `scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false` instead of copying the generic template by hand
   verify:
     - Confirm `KPT` is `1 1 1`
     - Confirm `replace_w_head = f` in `librpa.in`

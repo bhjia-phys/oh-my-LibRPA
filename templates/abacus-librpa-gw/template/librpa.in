@@ -1,3 +1,5 @@
+# Baseline template: periodic GW + shrink lane.
+# Do not reuse this file for the short molecular GW route; materialize `routes/molecule-gw-no-nscf-no-pyatb-no-shrink/` instead.
 task = g0w0_band
 nfreq = 16
 option_dielect_func = 3

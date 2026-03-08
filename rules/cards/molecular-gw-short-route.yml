@@ -3,7 +3,8 @@
   symptom: The generic periodic GW defaults overproduce files, miss the direct LibRPA handoff, or make `gamma_only` logic self-contradictory
   root_cause: This route is shorter than the periodic GW chain and needs a dedicated template rather than layered patches
   fix:
-    - Prefer the route template under `templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/`
+    - Materialize the case with `scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
+    - Treat the generated `.oh-my-librpa-route.env` and `OH_MY_LIBRPA_REFERENCE_TEMPLATE` as the authoritative route record
     - Keep `out_mat_xc 1`
     - Do not enable `out_chg` when no NSCF stage is planned
     - Do not enable `out_mat_r` or `out_mat_hs2` when `pyatb` is not part of the route

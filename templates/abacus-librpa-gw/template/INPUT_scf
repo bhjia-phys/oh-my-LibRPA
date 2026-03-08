@@ -1,4 +1,6 @@
 INPUT_PARAMETERS
+# Baseline template: periodic GW + shrink lane.
+# Do not reuse this file for the short molecular GW route; materialize `routes/molecule-gw-no-nscf-no-pyatb-no-shrink/` instead.
 #Parameters	(General)
 pseudo_dir		./
 orbital_dir		./

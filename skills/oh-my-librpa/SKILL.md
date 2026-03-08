@@ -91,7 +91,11 @@ Then proceed as follows:
    - In `get_diel.py`, update `nspin` and `use_soc` consistently
    - In `preprocess_abacus_for_librpa_band.py`, update `use_soc` consistently
    - In `librpa.in`, only switch `use_soc = 0/1`
-9. Generate workflow inputs from matched experience rules.
+9. When generating a GW case from templates, materialize the selected route instead of hand-copying files:
+   - Use `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type <molecule|solid|2D> --needs-nscf <true|false> --needs-pyatb <true|false> --use-shrink-abfs <true|false>`
+   - Treat the generated `.oh-my-librpa-route.env` and `OH_MY_LIBRPA_REFERENCE_TEMPLATE` as the authoritative route record
+   - Generate workflow inputs from matched experience rules only after materialization
+   - Only patch the materialized files afterward; do not start from the generic template when a dedicated route exists
 10. Apply task-specific `librpa.in` defaults unless a stronger rule overrides them:
    - shared runtime baseline:
      - `nfreq = 16`
@@ -129,7 +133,7 @@ Then proceed as follows:
    - Treat `gamma_only` as route-aware instead of forcing it as a universal rule
    - Use official ABACUS input names from the ABACUS input documentation
    - For GW: do not run `pyatb` and set `replace_w_head = f` in `librpa.in`
-   - For the tested short molecular GW smoke route (`molecule + GW + no NSCF + no pyatb + no shrink`), prefer `templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/`
+   - For the tested short molecular GW smoke route (`molecule + GW + no NSCF + no pyatb + no shrink`), materialize it with `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
    - Keep `out_mat_xc 1`, `exx_use_ewald 1`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, and `cs_inv_thr 1e-5`
    - Do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` for that short route
    - Copy `OUT.ABACUS/vxc_out.dat` to `./vxc_out` after SCF and stop if the file is missing
@@ -149,7 +153,7 @@ Then proceed as follows:
      - do not require `KPT_nscf`
      - run `SCF -> LibRPA`
 14. If shrink is enabled, require the user to specify `ABFS_ORBITAL` in `STRU` before continuing. Do not force shrink on the tested short molecular GW smoke route; that route uses `use_shrink_abfs = f`.
-15. Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when working on the server, but switch to the dedicated molecular short-route template when the user asks for `molecule + GW + no NSCF + no pyatb + no shrink`.
+15. Prefer scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when working on the server, but for `molecule + GW + no NSCF + no pyatb + no shrink`, switch routes by calling `oh-my-librpa/scripts/materialize_gw_template.sh` rather than copying the generic template manually.
 16. Run smoke-first setup.
 17. Run the installed `oh-my-librpa/scripts/check_consistency.sh <case_dir> --mode <gw|rpa> --system-type <molecule|solid|2D>` helper before remote execution so the static checks follow the selected route instead of assuming every case needs NSCF.
 18. Validate outputs using stage-specific success criteria before escalation.

@@ -25,6 +25,7 @@ Execution order depends on system type:
 - Verify `librpa.in` is generated from the same ABACUS workflow chain.
 - Verify the run is in a fresh directory to avoid stale-output contamination.
 - Prefer server-side scripts and reference inputs from `/mnt/sg001/home/ks_iopcas_ghj/gw/template` when available.
+- When generating a GW case from templates, materialize the route first with `oh-my-librpa/scripts/materialize_gw_template.sh` and treat `.oh-my-librpa-route.env` as the authoritative route record.
 - Recognize the canonical file bundle from server examples:
   - `INPUT`, `INPUT_scf`, `INPUT_nscf`
   - `KPT`, `KPT_scf`, `KPT_nscf`
@@ -101,7 +102,7 @@ Use the following alignment for spin-sensitive GW workflows:
 - Use official ABACUS input names from the ABACUS input reference
 - Do not run `pyatb`
 - Set `replace_w_head = f`
-- For the tested smoke path `molecule + GW + no NSCF + no pyatb + no shrink`, prefer the dedicated route template under `templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/`
+- For the tested smoke path `molecule + GW + no NSCF + no pyatb + no shrink`, materialize the dedicated route with `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
 - Keep `out_mat_xc 1`, `exx_use_ewald 1`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, and `cs_inv_thr 1e-5`
 - Do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` for that short route
 - Copy `OUT.ABACUS/vxc_out.dat` into the working directory as `vxc_out` before LibRPA
