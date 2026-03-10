@@ -1,31 +1,37 @@
 ---
 name: oh-my-librpa
-description: Chat-first orchestrator for ABACUS + LibRPA workflows. Use when users ask in natural language to prepare, run, or debug GW/RPA tasks. Route by system type (molecule, solid, 2D), apply experience rules, and avoid exposing CLI complexity.
+description: Chat-first orchestrator for ABACUS + LibRPA workflows. Use when users ask in natural language to prepare, run, audit, or debug GW/RPA tasks, especially when the agent must classify uploaded files, choose local vs server execution, route by system type (molecule, solid, 2D), and keep the interaction operational instead of exposing raw CLI complexity.
 ---
 
-# oh-my-librpa (Chat-First)
+# oh-my-librpa
 
-Treat user messages as task intents, not command requests.
+Treat the user message as an intent, not as a command request.
 
-## Core Behavior
+Keep the conversation short, operational, and stage-based.
 
-- Accept natural language only; do not require user-side custom commands.
-- Convert user intent into one of three paths:
-  - `GW workflow`
-  - `RPA workflow`
-  - `Debug workflow`
-- Determine system type early: `molecule` / `solid` / `2D`.
-- Explain major decisions with `why + risk + verification`.
+## Act as the front router
 
-## Mandatory File-Intake Handshake
+Do these steps in order:
 
-Before starting any compute task, ask the user to provide files first when available.
+1. Classify the task as `GW`, `RPA`, or `Debug`.
+2. Classify the system as `molecule`, `solid`, or `2D`.
+3. Ask for files first when the user already has a case bundle.
+4. Ask where execution should happen: local or server.
+5. Create a fresh isolated run directory before any real run.
+6. If the case needs PP/NAO/ABFS assets and the user did not provide a complete bundle, read `references/pp-nao-abfs-library.md` and select files from the bundled asset library.
+7. Route into the matching reference file and follow it strictly:
+   - `references/gw-route.md`
+   - `references/rpa-route.md`
+   - `references/debug-route.md`
+8. If server execution is chosen, also read `references/server-profiles.md` before submission.
+
+If the route is still ambiguous, ask the smallest possible clarification set.
+
+## Mandatory file-intake handshake
 
 Treat uploaded files as the primary source of truth.
 
-As soon as files land in a working directory, run the installed `oh-my-librpa/scripts/intake_preflight.sh <case_dir>` helper to classify the bundle, infer the likely route, and report what is still missing before asking extra questions.
-
-Classify user-provided files into one of these groups:
+Classify provided files into these groups:
 
 - `structure files`: `STRU`, `cif`, `xyz`, `geometry.in`
 - `input bundle`: `INPUT`, `INPUT_scf`, `INPUT_nscf`, `KPT`, `KPT_scf`, `KPT_nscf`, `librpa.in`
@@ -34,177 +40,64 @@ Classify user-provided files into one of these groups:
 - `logs/results`: output files, error logs, `band_out`, generated band data
 - `archives`: `zip`, `tar.gz`
 
-If the user provides files:
+Use these intake rules:
 
 - `structure files` -> generate or complete the workflow
-- `input bundle` -> audit and patch instead of rewriting blindly
-- `basis/pseudopotential assets` -> use them directly as authoritative inputs for basis and auxiliary-basis setup
-- `logs/results` -> enter debug mode first
-- `archives` -> unpack and classify before proceeding
+- `input bundle` -> audit and patch; do not rewrite blindly
+- `.abfs` files -> treat as authoritative candidates for `ABFS_ORBITAL`
+- `logs/results` -> start in Debug mode first
+- `archives` -> unpack and classify before asking more questions
 
-When the user provides `.abfs` files, treat them as direct candidates for `ABFS_ORBITAL` entries in `STRU`.
+If the user did not provide PP/NAO/ABFS assets, consult the bundled library described in `references/pp-nao-abfs-library.md`.
 
-If the user already has a server-side reference bundle, treat that bundle as authoritative. A typical bundle includes:
+If a server-side reference bundle already exists, prefer it over rebuilding from scratch.
 
-- `INPUT`, `INPUT_scf`, `INPUT_nscf`
-- `KPT`, `KPT_scf`, `KPT_nscf`
-- `STRU`, `geometry.in`, `librpa.in`
-- `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`, `output_librpa.py`, `plot_gw_band_paper.py`
+## Mandatory compute-location handshake
 
-## Mandatory Compute-Location Handshake
-
-Before starting any compute task, ask:
+Before compute, ask:
 
 1. `Do you want local compute or server compute?`
-2. If server compute is chosen, ask:
-   - `Do you need to enable VPN first?`
-   - `Do you want me to run connectivity/login checks now?`
+2. If server: `Do you need VPN first?`
+3. If server: `Do you want me to run connectivity/login checks now?`
 
-Then proceed as follows:
+Then branch:
 
-- **Local branch**
-  - Prefer preprocessing + static checks by default.
-  - If user explicitly requests local full compute, confirm once before execution.
+- Local -> prefer preprocessing and static checks first; confirm once before any full local compute
+- Server -> wait for VPN confirmation if needed, then verify login/connectivity, then materialize explicit runtime config before submission
 
-- **Server branch**
-  - If VPN is needed, wait for user confirmation that VPN is enabled.
-  - After confirmation, the AI attempts server login automatically.
-  - If login fails, report exact failure class (`timeout`, `auth`, `host resolution`, etc.) and provide minimal repair actions.
-  - Resolve or ask for a host profile before submission; do not silently trust interactive shell defaults for `python3`, MPI launcher, or executable paths.
+Do not trust interactive shell defaults for `python3`, MPI launchers, or executable paths.
 
-## Execution Protocol (after location is confirmed)
+## Run discipline
 
-1. Create a fresh isolated run directory (timestamped).
-2. Create `run-report.md` inside the run directory.
-3. Create one archived Markdown copy under `~/.openclaw/workspace/librpa/oh-my-librpa/` using `<timestamp>-<mode>.md`.
-4. Verify no overwrite of original data directories.
-5. Classify system type (`molecule` / `solid` / `2D`).
-6. Classify task type:
-   - GW request -> `task = g0w0_band`
-   - RPA request -> `task = rpa`
-7. Branch the workflow accordingly:
-   - GW route uses the full chain when needed: dielectric-function path, `pyatb`, NSCF, and band preprocessing
-   - RPA route skips GW-only preprocessing: no dielectric-function path, no `pyatb`, no NSCF, no `preprocess_abacus_for_librpa_band.py`
-   - Molecular GW is the short route `SCF -> LibRPA`; periodic GW (`solid` / `2D`) is the full route `SCF -> pyatb -> NSCF -> preprocess -> LibRPA`
-8. Classify spin/SOC state and keep `INPUT`, workflow scripts, and `librpa.in` aligned:
-   - Collinear spin, no SOC -> `nspin = 2`, `lspinorb = 0`
-   - Noncollinear with SOC -> `nspin = 4`, `lspinorb = 1`
-   - In `get_diel.py`, update `nspin` and `use_soc` consistently
-   - In `preprocess_abacus_for_librpa_band.py`, update `use_soc` consistently
-   - In `librpa.in`, only switch `use_soc = 0/1`
-9. When generating a GW case from templates, materialize the selected route instead of hand-copying files:
-   - Use `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type <molecule|solid|2D> --needs-nscf <true|false> --needs-pyatb <true|false> --use-shrink-abfs <true|false>`
-   - Treat the generated `.oh-my-librpa-route.env` and `OH_MY_LIBRPA_REFERENCE_TEMPLATE` as the authoritative route record
-   - Generate workflow inputs from matched experience rules only after materialization
-   - Only patch the materialized files afterward; do not start from the generic template when a dedicated route exists
-10. Apply task-specific `librpa.in` defaults unless a stronger rule overrides them:
-   - shared runtime baseline:
-     - `nfreq = 16`
-     - `use_soc = 0/1` according to the chosen spin/SOC branch
-     - `use_scalapack_gw_wc = t`
-     - `use_scalapack_ecrpa = t`
-     - `parallel_routing = libri`
-     - `vq_threshold = 0`
-     - `sqrt_coulomb_threshold = 0`
-     - `use_fullcoul_exx = t`
-     - `libri_chi0_threshold_C = 1e-4`
-     - `libri_chi0_threshold_G = 1e-5`
-     - `libri_exx_threshold_V = 1e-1`
-     - `libri_exx_threshold_C = 1e-4`
-     - `libri_exx_threshold_D = 1e-4`
-   - GW-specific additions:
-     - `option_dielect_func = 3`
-     - `replace_w_head = t`
-     - For the tested short molecular GW route, override with `replace_w_head = f`
-     - `output_gw_sigc_mat_rf = t`
-     - `libri_g0w0_threshold_C = 1e-5`
-     - `libri_g0w0_threshold_G = 1e-5`
-     - `libri_g0w0_threshold_Wc = 1e-6`
-   - RPA-specific rule:
-     - keep `task = rpa`
-     - do not insert GW-only dielectric-function preprocessing settings into the workflow
-11. For both `molecule` and `solid` branches:
-   - Modify `INPUT_scf` and `INPUT_nscf` so `nbands` equals the basis-function count when both files are part of the route
-   - Count basis functions from `.orb` files using `s=1`, `p=3`, `d=5`, `f=7`, ... with radial multiplicity, then sum over all atoms in the primitive cell
-   - If SOC is enabled, multiply the final basis count by `2`
-   - Cross-check the chosen `nbands` against ABACUS `NBASE`
-   - If there is any ambiguity in basis counting, stop and explain the counting rule before proceeding
-12. If the system is `molecule`:
-   - Set `KPT = 1 1 1`
-   - Treat `gamma_only` as route-aware instead of forcing it as a universal rule
-   - Use official ABACUS input names from the ABACUS input documentation
-   - For GW: do not run `pyatb` and set `replace_w_head = f` in `librpa.in`
-   - For the tested short molecular GW smoke route (`molecule + GW + no NSCF + no pyatb + no shrink`), materialize it with `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
-   - Keep `out_mat_xc 1`, `exx_use_ewald 1`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, and `cs_inv_thr 1e-5`
-   - Do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` for that short route
-   - Copy `OUT.ABACUS/vxc_out.dat` to `./vxc_out` after SCF and stop if the file is missing
-   - Stop before LibRPA unless at least one `coulomb_mat_*.txt` file exists
-   - For RPA: keep the short route `SCF -> LibRPA`
-13. If the system is `solid`:
-   - Ask how many k-points to use in `KPT`; default to `8 8 8`
-   - For GW:
-     - `KPT_nscf` must be defined by the user
-     - After SCF, run `pyatb` to generate `pyatb_librpa_df`
-     - Then run NSCF
-     - Then run `preprocess_abacus_for_librpa_band.py` to generate band information files
-     - Then run `LibRPA`
-   - For RPA:
-     - do not run `pyatb`
-     - do not run NSCF
-     - do not require `KPT_nscf`
-     - run `SCF -> LibRPA`
-14. If shrink is enabled, require the user to specify `ABFS_ORBITAL` in `STRU` before continuing. Do not force shrink on the tested short molecular GW smoke route; that route uses `use_shrink_abfs = f`.
-15. Prefer a user-curated server-side reference bundle when one already exists, but for `molecule + GW + no NSCF + no pyatb + no shrink`, switch routes by calling `oh-my-librpa/scripts/materialize_gw_template.sh` rather than copying the generic template manually.
-16. For server compute, materialize explicit runtime config before submission:
-   - Use `oh-my-librpa/scripts/materialize_server_profile.sh --case-dir <case_dir> --profile <name-or-path>` to write `env.sh`
-   - Use `oh-my-librpa/scripts/materialize_batch_probe.sh --case-dir <case_dir> --profile <name-or-path>` when launcher / python3 / PATH behavior still needs a batch-node probe
-   - Prefer explicit `python3_exec`, `abacus_work`, `librpa_work`, and launcher paths over `source ~/.bashrc` guesses
-   - For the detailed profile format and workflow, read `oh-my-librpa/references/server-profiles.md`
-17. Run smoke-first setup.
-18. Run the installed `oh-my-librpa/scripts/check_consistency.sh <case_dir> --mode <gw|rpa> --system-type <molecule|solid|2D>` helper before remote execution so the static checks follow the selected route instead of assuming every case needs NSCF.
-19. Validate outputs using stage-specific success criteria before escalation.
-19. For a full GW chain, judge stages with generic markers. Only `LibRPA` needs explicit status monitoring; `pyatb` and `preprocess` usually only need completion checks:
-   - SCF: completed `running_scf.log` + `ABACUS-CHARGE-DENSITY.restart`
-   - pyatb: `pyatb_librpa_df/` + `band_out` + `KS_eigenvector_*.dat`
-   - NSCF: completed `running_nscf.log` + `eig.txt`
-   - preprocess: `band_kpath_info` + `band_KS_*` + `band_vxc*`
-   - LibRPA success: rank-0 output reaches `Timer stop:  total.` and `GW_band_spin_*.dat` exists
-   - LibRPA running: rank-0 output exists, has no final `Timer stop:  total.` yet, and is still growing
-   - LibRPA failed: no final `Timer stop:  total.` and the rank-0 output is no longer growing, or the output file is missing
-20. For GW execution, prefer the installed `run_gw_workflow.sh` runner so stage execution, route-aware skipping, verification, and reporting stay in one flow.
-21. For a full RPA execution path, prefer the installed `run_rpa_workflow.sh` runner so stage execution, verification, and reporting stay in one flow.
-22. After each verified stage update, call the installed `report_stage.sh` helper to write both Markdown logs: the run-directory `run-report.md` and the archived copy under `~/.openclaw/workspace/librpa/oh-my-librpa/`.
-23. For periodic GW post-processing, prefer the bundled `plot_gw_band_paper.py` helper:
-   - Inputs: `GW_band_spin_*`, `band_out`, `band_kpath_info`, `KPT_nscf`
-   - Outputs: near-gap paper-style PNG/PDF plus a text summary
-   - Use the restricted near-gap CBM search instead of a blind global conduction-band minimum search
-24. Send the script stdout to the user as the stage summary before moving to the next critical stage.
+Always do all of the following:
 
-## Routing Rules
+- Create a fresh timestamped run directory
+- Create `run-report.md` in that directory
+- Create an archived Markdown copy under `~/.openclaw/workspace/librpa/oh-my-librpa/`
+- Refuse to overwrite original data directories
+- Prefer smoke-first validation before expensive runs
+- Apply route-aware static checks before remote submission
+- Report after every mini-stage: `what was done`, `what was observed`, `what is next`
 
-1. If user asks to start GW: use GW path and apply conservative smoke-first strategy.
-2. If user asks dielectric/response focus: use RPA path.
-3. If user reports failure/log errors: use Debug path first.
-4. If system type is unclear, ask the smallest set of clarifying questions.
+## Routing rules
 
-## Safety Rules
+- User asks to start a GW workflow -> route to `references/gw-route.md`
+- User asks for dielectric/response/RPA work -> route to `references/rpa-route.md`
+- User reports failure, weird output, parser/read issues, or mixed inputs -> route to `references/debug-route.md`
+- User provides logs before asking anything else -> route to `references/debug-route.md`
 
-- Always require a new run directory for each run chain.
-- Never overwrite original source-data directories.
-- Prefer static consistency checks before remote execution.
-- For expensive/long jobs, confirm server and resource choice first.
+## Safety rules
 
-## Experience Integration
+- Always require a new run directory for each run chain
+- Never overwrite original source-data directories
+- Prefer static consistency checks before remote execution
+- Confirm server and resource choice before expensive or long jobs
+- When the basis count, route, or spin/SOC alignment is ambiguous, stop and explain the ambiguity before proceeding
 
-- Prefer curated rule cards under `oh-my-librpa/rules/`.
-- For conflicting rules, prioritize:
-  - safety constraints
-  - hard consistency checks
-  - empirical defaults
+## Output style
 
-## Interaction Style
+Keep replies concise and useful.
 
-- Keep conversation concise and operational.
-- Give options only when there is a real tradeoff.
-- Default to "make progress now" with a clear next action.
-- At each mini-stage, report: `what was done`, `what was observed`, `what is next`.
+Only offer options when there is a real tradeoff.
+
+Default to a clear next action that moves the case forward now.
