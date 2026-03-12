@@ -171,7 +171,7 @@ Only `LibRPA` needs an explicit status judgment in the normal workflow. `pyatb` 
 
 - `OUT.ABACUS/running_nscf.log` exists
 - `running_nscf.log` contains both `Finish Time` and `Total Time`
-- `OUT.ABACUS/eig.txt` exists and is non-empty
+- either `OUT.ABACUS/eig.txt` or `OUT.ABACUS/eig_occ.txt` exists and is non-empty
 
 ### preprocess success
 
@@ -181,19 +181,19 @@ Only `LibRPA` needs an explicit status judgment in the normal workflow. `pyatb` 
 
 ### LibRPA success
 
-- `librpa_para_nprocs_*_myid_0.out` exists
-- either the rank-0 output contains `Timer stop:  total.` and at least one `GW_band_spin_*.dat` file exists
-- or the rank-0 output contains `libRPA finished successfully` and the molecular GW outputs `band_out`, `vxc_out`, and `coulomb_mat_*.txt` exist
+- a rank-0 LibRPA output file exists, for example `librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`
+- either the periodic GW outputs include at least one `GW_band_spin_*.dat` file and the rank-0 output contains `Timer stop:  total.` or `libRPA finished successfully`
+- or the molecular GW outputs `band_out`, `vxc_out`, and `coulomb_mat_*.txt` exist and the rank-0 output contains `libRPA finished successfully`
 
 ### LibRPA still running
 
-- `librpa_para_nprocs_*_myid_0.out` exists
-- the rank-0 output does not yet contain `Timer stop:  total.`
+- a rank-0 LibRPA output file exists, for example `librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`
+- the rank-0 output does not yet contain `Timer stop:  total.` or `libRPA finished successfully`
 - the rank-0 output file is still growing
 
 ### LibRPA failed
 
-- there is no final `Timer stop:  total.` marker
+- there is no final `Timer stop:  total.` or `libRPA finished successfully` marker
 - and the rank-0 output file is no longer growing, or the output file is missing
 
 ## Periodic GW Plotting

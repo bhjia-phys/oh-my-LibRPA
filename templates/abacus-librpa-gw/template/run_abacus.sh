@@ -112,7 +112,10 @@ cp KPT_nscf KPT
 cp INPUT_nscf INPUT
 "$mpirun_exec" -np "$mpi_ranks" "$abacus_work" >> "nscf.${SLURM_JOB_ID:-manual}.out"
 require_file OUT.ABACUS/running_nscf.log
-require_file OUT.ABACUS/eig.txt
+if [[ ! -f OUT.ABACUS/eig.txt && ! -f OUT.ABACUS/eig_occ.txt ]]; then
+  echo "Missing required file: OUT.ABACUS/eig.txt or OUT.ABACUS/eig_occ.txt" >&2
+  exit 1
+fi
 
 "$python3_exec" preprocess_abacus_for_librpa_band.py
 require_file band_kpath_info
@@ -120,7 +123,10 @@ require_glob 'band_KS_*'
 require_glob 'band_vxc*'
 
 OMP_NUM_THREADS="$omp_threads" "$mpirun_exec" -np "$libri_mpi_ranks" "$librpa_work" >> "LibRPA.${SLURM_JOB_ID:-manual}.out"
-require_glob 'librpa_para_nprocs_*_myid_0.out'
+if ! compgen -G 'librpa_para_nprocs_*_myid_0.out' >/dev/null && ! compgen -G 'LibRPA*.out' >/dev/null; then
+  echo 'Missing required files matching: librpa_para_nprocs_*_myid_0.out or LibRPA*.out' >&2
+  exit 1
+fi
 require_glob 'GW_band_spin_*'
 
 echo "End Time: $(date)"

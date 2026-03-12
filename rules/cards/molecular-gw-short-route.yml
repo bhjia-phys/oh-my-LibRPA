@@ -21,7 +21,7 @@
   verify:
     - Confirm `vxc_out` exists in the working directory before LibRPA
     - Confirm at least one `coulomb_mat_*.txt` file exists before LibRPA
-    - Confirm `band_out`, `vxc_out`, and `librpa_para_nprocs_*_myid_0.out` exist after the run
+    - Confirm `band_out`, `vxc_out`, and a rank-0 LibRPA output file (`librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`) exist after the run
     - Confirm rank-0 output contains `libRPA finished successfully`
   applies_to:
     mode: gw

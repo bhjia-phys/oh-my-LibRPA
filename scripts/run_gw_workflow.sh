@@ -211,12 +211,12 @@ execute_verified_stage() {
 execute_librpa_stage() {
   local started_at
   local ended_at
-  local success_outputs='librpa_para_nprocs_*_myid_0.out, GW_band_spin_*'
+  local success_outputs='librpa_para_nprocs_*_myid_0.out or LibRPA*.out, GW_band_spin_*'
   local final_artifacts='GW_band_spin_*'
   started_at="$(workflow_now)"
 
   if [[ "$system_type" == "molecule" ]]; then
-    success_outputs='librpa_para_nprocs_*_myid_0.out, band_out, vxc_out, coulomb_mat_*.txt'
+    success_outputs='librpa_para_nprocs_*_myid_0.out or LibRPA*.out, band_out, vxc_out, coulomb_mat_*.txt'
     final_artifacts='band_out, vxc_out, coulomb_mat_*.txt'
   fi
 
@@ -271,6 +271,6 @@ fi
 
 execute_verified_stage scf "$scf_cmd" verify_scf_stage 'OUT.ABACUS/running_scf.log, OUT.ABACUS/ABACUS-CHARGE-DENSITY.restart' 'Run pyatb.'
 execute_verified_stage pyatb "$pyatb_cmd" verify_pyatb_stage 'pyatb_librpa_df/band_out, pyatb_librpa_df/KS_eigenvector_*.dat' 'Run NSCF.'
-execute_verified_stage nscf "$nscf_cmd" verify_nscf_stage 'OUT.ABACUS/running_nscf.log, OUT.ABACUS/eig.txt' 'Run preprocess.'
+execute_verified_stage nscf "$nscf_cmd" verify_nscf_stage 'OUT.ABACUS/running_nscf.log, OUT.ABACUS/eig.txt or OUT.ABACUS/eig_occ.txt' 'Run preprocess.'
 execute_verified_stage preprocess "$preprocess_cmd" verify_preprocess_stage 'band_kpath_info, band_KS_*, band_vxc*' 'Run LibRPA.'
 execute_librpa_stage

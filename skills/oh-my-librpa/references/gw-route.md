@@ -154,7 +154,7 @@ Use these generic checks.
 
 - `OUT.ABACUS/running_nscf.log` exists
 - the log contains both `Finish Time` and `Total Time`
-- `OUT.ABACUS/eig.txt` exists and is non-empty
+- either `OUT.ABACUS/eig.txt` or `OUT.ABACUS/eig_occ.txt` exists and is non-empty
 
 ### preprocess success
 
@@ -166,7 +166,7 @@ Use these generic checks.
 
 Accept either periodic or molecular success markers:
 
-- periodic: rank-0 output reaches `Timer stop:  total.` and `GW_band_spin_*.dat` exists
+- periodic: a rank-0 output file (for example `librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`) reaches `Timer stop:  total.` or `libRPA finished successfully`, and `GW_band_spin_*.dat` exists
 - molecular: output contains `libRPA finished successfully` and required outputs such as `band_out`, `vxc_out`, and `coulomb_mat_*.txt` exist
 
 ### LibRPA running

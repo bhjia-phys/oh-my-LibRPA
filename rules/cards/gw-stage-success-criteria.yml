@@ -35,10 +35,10 @@
   fix:
     - Check that `OUT.ABACUS/running_nscf.log` exists
     - Check that `running_nscf.log` contains both `Finish Time` and `Total Time` (allow variable spacing between words)
-    - Check that `OUT.ABACUS/eig.txt` exists
+    - Check that either `OUT.ABACUS/eig.txt` or `OUT.ABACUS/eig_occ.txt` exists
   verify:
     - Confirm the NSCF log ends normally rather than with an error backtrace
-    - Confirm `eig.txt` is non-empty
+    - Confirm `eig.txt` or `eig_occ.txt` is non-empty
   applies_to:
     mode: gw
     stage: nscf
@@ -62,8 +62,8 @@
   symptom: Need a generic success signal for the long LibRPA stage
   root_cause: Periodic and molecular GW routes finish with different final artifact sets
   fix:
-    - Check that `librpa_para_nprocs_*_myid_0.out` exists
-    - For the periodic GW route, check that the rank-0 output contains `Timer stop:  total.` and that at least one `GW_band_spin_*.dat` file exists
+    - Check that a rank-0 LibRPA output file exists, such as `librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`
+    - For the periodic GW route, check that the rank-0 output contains `Timer stop:  total.` or `libRPA finished successfully`, and that at least one `GW_band_spin_*.dat` file exists
     - For the tested molecular short route, check that the rank-0 output contains `libRPA finished successfully` and that `band_out`, `vxc_out`, and at least one `coulomb_mat_*.txt` file exist
   verify:
     - Confirm the rank-0 output reaches the expected completion marker for the chosen route
@@ -77,8 +77,8 @@
   symptom: LibRPA is the only stage in the standard GW chain that usually needs explicit running-state checks
   root_cause: `pyatb` and `preprocess` are usually short, while LibRPA is long-running enough to require progress-aware monitoring
   fix:
-    - Check that `librpa_para_nprocs_*_myid_0.out` exists
-    - Check that the rank-0 output does not yet contain `Timer stop:  total.`
+    - Check that a rank-0 LibRPA output file exists, such as `librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`
+    - Check that the rank-0 output does not yet contain `Timer stop:  total.` or `libRPA finished successfully`
     - Check that the rank-0 output file is still growing or has recent timestamp updates
   verify:
     - Confirm file modification time is recent relative to the current check
@@ -92,7 +92,7 @@
   symptom: Need a simple failure decision without introducing extra states
   root_cause: In the simplified workflow, any LibRPA state that is neither successful nor still progressing should be treated as failure
   fix:
-    - If `Timer stop:  total.` exists and final GW band files exist, treat as success
+    - If `Timer stop:  total.` or `libRPA finished successfully` exists and final GW band files exist, treat as success
     - Else if the rank-0 output is still growing, treat as running
     - Else treat the run as failed
   verify:

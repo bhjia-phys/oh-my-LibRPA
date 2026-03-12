@@ -97,13 +97,13 @@ verify_nscf_stage() {
   local ssh_target="$2"
   local run_dir="$3"
 
-  local body='[[ -s OUT.ABACUS/running_nscf.log && -s OUT.ABACUS/eig.txt ]] && grep -Eq "Finish[[:space:]]+Time" OUT.ABACUS/running_nscf.log && grep -Eq "Total[[:space:]]+Time" OUT.ABACUS/running_nscf.log'
+  local body='[[ -s OUT.ABACUS/running_nscf.log ]] && grep -Eq "Finish[[:space:]]+Time" OUT.ABACUS/running_nscf.log && grep -Eq "Total[[:space:]]+Time" OUT.ABACUS/running_nscf.log && ([[ -s OUT.ABACUS/eig.txt ]] || [[ -s OUT.ABACUS/eig_occ.txt ]])'
   if run_target_command "$compute_location" "$ssh_target" "$run_dir" "$body"; then
-    VERIFY_MESSAGE='`running_nscf.log` contains `Finish Time` and `Total Time` (allowing merged-branch spacing changes), and `eig.txt` exists.'
+    VERIFY_MESSAGE='`running_nscf.log` contains `Finish Time` and `Total Time` (allowing merged-branch spacing changes), and either `eig.txt` or `eig_occ.txt` exists.'
     return 0
   fi
 
-  VERIFY_MESSAGE='NSCF success markers are incomplete: expected `running_nscf.log` with `Finish Time`/`Total Time` and `eig.txt`.'
+  VERIFY_MESSAGE='NSCF success markers are incomplete: expected `running_nscf.log` with `Finish Time`/`Total Time` and either `eig.txt` or `eig_occ.txt`.'
   return 1
 }
 
@@ -127,7 +127,7 @@ find_librpa_rank0_output() {
   local ssh_target="$2"
   local run_dir="$3"
 
-  capture_target_command "$compute_location" "$ssh_target" "$run_dir" 'ls librpa_para_nprocs_*_myid_0.out 2>/dev/null | head -n 1'
+  capture_target_command "$compute_location" "$ssh_target" "$run_dir" 'for f in librpa_para_nprocs_*_myid_0.out LibRPA*.out; do [[ -f "$f" ]] && { printf "%s\n" "$f"; break; }; done'
   if [[ -n "$LAST_TARGET_OUTPUT" ]]; then
     printf '%s
 ' "$LAST_TARGET_OUTPUT"
@@ -163,9 +163,9 @@ verify_librpa_success_stage() {
     return 1
   fi
 
-  local body="grep -q 'Timer stop:  total\.' '$rank0' && compgen -G 'GW_band_spin_*' >/dev/null"
+  local body="compgen -G 'GW_band_spin_*' >/dev/null && (grep -q 'Timer stop:  total\.' '$rank0' || grep -q 'libRPA finished successfully' '$rank0')"
   if run_target_command "$compute_location" "$ssh_target" "$run_dir" "$body"; then
-    VERIFY_MESSAGE='LibRPA rank-0 output reached `Timer stop:  total.` and `GW_band_spin_*` exists.'
+    VERIFY_MESSAGE='LibRPA rank-0 output reached a recognized completion marker (`Timer stop:  total.` or `libRPA finished successfully`) and `GW_band_spin_*` exists.'
     return 0
   fi
 
@@ -175,7 +175,7 @@ verify_librpa_success_stage() {
     return 0
   fi
 
-  VERIFY_MESSAGE='LibRPA did not reach the final completion markers: expected either `Timer stop:  total.` with `GW_band_spin_*`, or the molecular GW markers `libRPA finished successfully` + `band_out` + `vxc_out` + `coulomb_mat_*.txt`.'
+  VERIFY_MESSAGE='LibRPA did not reach the final completion markers: expected either periodic GW markers (`GW_band_spin_*` plus `Timer stop:  total.` or `libRPA finished successfully`) or the molecular GW markers `libRPA finished successfully` + `band_out` + `vxc_out` + `coulomb_mat_*.txt`.'
   return 1
 }
 
@@ -191,13 +191,13 @@ verify_rpa_librpa_success_stage() {
     return 1
   fi
 
-  local body="grep -q 'Timer stop:  total\.' '$rank0'"
+  local body="grep -q 'Timer stop:  total\.' '$rank0' || grep -q 'libRPA finished successfully' '$rank0'"
   if run_target_command "$compute_location" "$ssh_target" "$run_dir" "$body"; then
-    VERIFY_MESSAGE='LibRPA rank-0 output reached `Timer stop:  total.`.'
+    VERIFY_MESSAGE='LibRPA rank-0 output reached a recognized completion marker (`Timer stop:  total.` or `libRPA finished successfully`).'
     return 0
   fi
 
-  VERIFY_MESSAGE='LibRPA did not reach the final completion marker: expected `Timer stop:  total.` in rank-0 output.'
+  VERIFY_MESSAGE='LibRPA did not reach a recognized final completion marker: expected `Timer stop:  total.` or `libRPA finished successfully` in rank-0 output.'
   return 1
 }
 

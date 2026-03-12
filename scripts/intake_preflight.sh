@@ -133,7 +133,7 @@ collect_lines input_bundle "find '$case_dir' -type f \\( -name 'INPUT' -o -name 
 collect_lines workflow_scripts "find '$case_dir' -type f \\( -name 'get_diel.py' -o -name 'perform.sh' -o -name 'preprocess_abacus_for_librpa_band.py' -o -name 'run_abacus.sh' -o -name 'output_librpa.py' -o -name 'plot_gw_band_paper.py' -o -name 'env.sh' -o -name 'probe_batch.sh' \\) | sed 's#^$case_dir/##' | sort"
 collect_lines basis_assets "find '$case_dir' -type f \\( -name '*.orb' -o -name '*.abfs' -o -name '*.upf' \\) | sed 's#^$case_dir/##' | sort"
 collect_lines archives "find '$case_dir' -type f \\( -name '*.zip' -o -name '*.tar' -o -name '*.tar.gz' -o -name '*.tgz' \\) | sed 's#^$case_dir/##' | sort"
-collect_lines log_files "find '$case_dir' \\( -type f \\( -name '*.log' -o -name '*.out' -o -name 'band_out' -o -name 'band_kpath_info' -o -name 'band_KS_*' -o -name 'band_vxc*' -o -name 'GW_band_spin_*' -o -name 'eig.txt' \\) -o -type d -name 'pyatb_librpa_df' \\) | sed 's#^$case_dir/##' | sort"
+collect_lines log_files "find '$case_dir' \( -type f \( -name '*.log' -o -name '*.out' -o -name 'band_out' -o -name 'band_kpath_info' -o -name 'band_KS_*' -o -name 'band_vxc*' -o -name 'GW_band_spin_*' -o -name 'eig.txt' -o -name 'eig_occ.txt' -o -name 'LibRPA*.out' \) -o -type d -name 'pyatb_librpa_df' \) | sed 's#^$case_dir/##' | sort"
 
 resolved_mode="$mode"
 if [[ "$resolved_mode" == "auto" ]]; then

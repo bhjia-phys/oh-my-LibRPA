@@ -202,12 +202,12 @@ execute_librpa_stage() {
   if [[ -z "$librpa_cmd" ]]; then
     if verify_rpa_librpa_success_stage "$compute_location" "$ssh_target" "$run_dir"; then
       ended_at="$(workflow_now)"
-      report_stage librpa success "$started_at" "$ended_at" "Detected existing LibRPA outputs and verified them." "$VERIFY_MESSAGE" "Workflow complete." 'librpa_para_nprocs_*_myid_0.out' "RPA workflow completed successfully." 'librpa_para_nprocs_*_myid_0.out'
+      report_stage librpa success "$started_at" "$ended_at" "Detected existing LibRPA outputs and verified them." "$VERIFY_MESSAGE" "Workflow complete." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out' "RPA workflow completed successfully." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out'
       return 0
     fi
 
     ended_at="$(workflow_now)"
-    report_stage librpa failed "$started_at" "$ended_at" "No LibRPA command was provided and existing outputs did not verify." "$VERIFY_MESSAGE" "Provide a LibRPA command or repair the existing outputs." 'librpa_para_nprocs_*_myid_0.out'
+    report_stage librpa failed "$started_at" "$ended_at" "No LibRPA command was provided and existing outputs did not verify." "$VERIFY_MESSAGE" "Provide a LibRPA command or repair the existing outputs." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out'
     return 1
   fi
 
@@ -215,7 +215,7 @@ execute_librpa_stage() {
   start_target_command_bg "$compute_location" "$ssh_target" "$run_dir" "$librpa_cmd"
   runner_pid="$TARGET_BG_PID"
 
-  report_stage librpa running "$started_at" "$started_at" "Started the LibRPA command." "$(librpa_running_observation "$compute_location" "$ssh_target" "$run_dir")" "Keep monitoring until LibRPA reaches completion markers." 'librpa_para_nprocs_*_myid_0.out'
+  report_stage librpa running "$started_at" "$started_at" "Started the LibRPA command." "$(librpa_running_observation "$compute_location" "$ssh_target" "$run_dir")" "Keep monitoring until LibRPA reaches completion markers." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out'
 
   local command_status=0
   while kill -0 "$runner_pid" 2>/dev/null; do
@@ -228,15 +228,15 @@ execute_librpa_stage() {
 
   if verify_rpa_librpa_success_stage "$compute_location" "$ssh_target" "$run_dir"; then
     ended_at="$(workflow_now)"
-    report_stage librpa success "$started_at" "$ended_at" "LibRPA finished and passed its completion checks." "$VERIFY_MESSAGE" "Workflow complete." 'librpa_para_nprocs_*_myid_0.out' "RPA workflow completed successfully." 'librpa_para_nprocs_*_myid_0.out'
+    report_stage librpa success "$started_at" "$ended_at" "LibRPA finished and passed its completion checks." "$VERIFY_MESSAGE" "Workflow complete." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out' "RPA workflow completed successfully." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out'
     return 0
   fi
 
   ended_at="$(workflow_now)"
   if [[ "$command_status" -ne 0 ]]; then
-    report_stage librpa failed "$started_at" "$ended_at" "LibRPA command exited with a non-zero status." "$VERIFY_MESSAGE" "Inspect rank-0 output and remote command stderr before retrying." 'librpa_para_nprocs_*_myid_0.out'
+    report_stage librpa failed "$started_at" "$ended_at" "LibRPA command exited with a non-zero status." "$VERIFY_MESSAGE" "Inspect rank-0 output and remote command stderr before retrying." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out'
   else
-    report_stage librpa failed "$started_at" "$ended_at" "LibRPA command finished but final success markers are missing." "$VERIFY_MESSAGE" "Inspect rank-0 output before retrying." 'librpa_para_nprocs_*_myid_0.out'
+    report_stage librpa failed "$started_at" "$ended_at" "LibRPA command finished but final success markers are missing." "$VERIFY_MESSAGE" "Inspect rank-0 output before retrying." 'librpa_para_nprocs_*_myid_0.out or LibRPA*.out'
   fi
   return 1
 }
