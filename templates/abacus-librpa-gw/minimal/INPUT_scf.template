@@ -18,4 +18,4 @@ rpa 1
 exx_pca_threshold 10
 shrink_abfs_pca_thr 1e-4
 shrink_lu_inv_thr 1e-3
-cs_inv_thr 1e-5
+exx_cs_inv_thr 1e-5

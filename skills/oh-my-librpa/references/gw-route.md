@@ -94,7 +94,7 @@ Required settings and checks:
 - set `replace_w_head = f`
 - for the tested short smoke path, materialize the route with:
   - `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
-- keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, `cs_inv_thr 1e-5`
+- keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, `exx_cs_inv_thr 1e-5`
 - do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` on that short route
 - copy `OUT.ABACUS/vxc_out.dat` to `./vxc_out` after SCF
 - stop before LibRPA unless at least one `coulomb_mat_*.txt` file exists
@@ -127,7 +127,7 @@ Generic shrink lane:
 - `exx_pca_threshold 10`
 - `shrink_abfs_pca_thr 1e-4`
 - `shrink_lu_inv_thr 1e-3`
-- `cs_inv_thr 1e-5`
+- `exx_cs_inv_thr 1e-5`
 
 Additional rule:
 

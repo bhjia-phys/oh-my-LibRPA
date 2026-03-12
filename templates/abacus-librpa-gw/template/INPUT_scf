@@ -38,4 +38,4 @@ rpa_ccp_rmesh_times     6
 exx_real_number         1
 shrink_abfs_pca_thr     1e-4
 shrink_lu_inv_thr       1e-3
-cs_inv_thr              1e-5
+exx_cs_inv_thr              1e-5

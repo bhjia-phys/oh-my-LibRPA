@@ -245,7 +245,7 @@ else
 fi
 
 if grep -qiE '^use_shrink_abfs[[:space:]]*=[[:space:]]*t([[:space:]]|$)' "$librpa"; then
-  for key in rpa exx_pca_threshold shrink_abfs_pca_thr shrink_lu_inv_thr cs_inv_thr; do
+  for key in rpa exx_pca_threshold shrink_abfs_pca_thr shrink_lu_inv_thr exx_cs_inv_thr; do
     if grep -qiE "^${key}[[:space:]]+" "$scf"; then
       note_pass "shrink companion key present in INPUT_scf: $key"
     else
@@ -255,10 +255,10 @@ if grep -qiE '^use_shrink_abfs[[:space:]]*=[[:space:]]*t([[:space:]]|$)' "$librp
 
   val_exx="$(trim "$(get_value "$scf" "exx_pca_threshold" || true)")"
   val_lu="$(trim "$(get_value "$scf" "shrink_lu_inv_thr" || true)")"
-  val_cs="$(trim "$(get_value "$scf" "cs_inv_thr" || true)")"
+  val_cs="$(trim "$(get_value "$scf" "exx_cs_inv_thr" || true)")"
   [[ "$val_exx" == "10" ]] || note_warn "exx_pca_threshold=$val_exx (common default: 10)"
   [[ "$val_lu" == "1e-3" ]] || note_warn "shrink_lu_inv_thr=$val_lu (common default: 1e-3)"
-  [[ "$val_cs" == "1e-5" ]] || note_warn "cs_inv_thr=$val_cs (common default: 1e-5)"
+  [[ "$val_cs" == "1e-5" ]] || note_warn "exx_cs_inv_thr=$val_cs (common default: 1e-5)"
 
   if [[ -f "$stru" ]]; then
     if grep -qiE '^[[:space:]]*ABFS_ORBITAL([[:space:]]|$)' "$stru"; then

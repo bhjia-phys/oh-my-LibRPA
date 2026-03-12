@@ -25,7 +25,7 @@
       - `exx_pca_threshold 10`
       - `shrink_abfs_pca_thr 1e-4`
       - `shrink_lu_inv_thr 1e-3`
-      - `cs_inv_thr 1e-5`
+      - `exx_cs_inv_thr 1e-5`
     - Interpret `shrink_abfs_pca_thr` as the control on compressed auxiliary-basis size
     - Interpret `shrink_lu_inv_thr` as the inversion-error control for output `sinvS`
     - Interpret `exx_pca_threshold = 10` as the external-input route when shrink is enabled
@@ -38,4 +38,4 @@
       use_shrink_abfs_t_count: 156
       exx_pca_threshold_10_count: 367
       shrink_lu_inv_thr_1e-3_count: 74
-      cs_inv_thr_1e-5_count: 51
+      exx_cs_inv_thr_1e-5_count: 51

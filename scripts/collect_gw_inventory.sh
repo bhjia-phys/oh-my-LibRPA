@@ -40,7 +40,7 @@ set -e
 cd $remote_dir
 find . -maxdepth 4 -type f \( -name 'librpa.in' -o -name 'INPUT_scf' -o -name 'INPUT_nscf' \) | while read -r f; do
   echo '===== '"'$remote_dir'"'/'\"\$f\"' ====='
-  grep -E '^(nbands|nfreq|use_shrink_abfs|rpa|exx_pca_threshold|shrink_abfs_pca_thr|shrink_lu_inv_thr|cs_inv_thr)[[:space:]]*' \"\$f\" || true
+  grep -E '^(nbands|nfreq|use_shrink_abfs|rpa|exx_pca_threshold|shrink_abfs_pca_thr|shrink_lu_inv_thr|exx_cs_inv_thr)[[:space:]]*' \"\$f\" || true
   echo
  done
 " > "$param_file"

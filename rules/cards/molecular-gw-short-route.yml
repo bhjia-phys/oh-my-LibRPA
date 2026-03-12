@@ -12,7 +12,7 @@
     - Set `exx_pca_threshold = 1e-6`
     - Set `rpa_ccp_rmesh_times = 6`
     - Set `exx_ccp_rmesh_times = 3`
-    - Set `cs_inv_thr = 1e-5`
+    - Set `exx_cs_inv_thr = 1e-5`
     - Set `replace_w_head = f`
     - Set `use_shrink_abfs = f`
     - Copy `OUT.ABACUS/vxc_out.dat` into the working directory as `vxc_out` after SCF
