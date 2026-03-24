@@ -109,6 +109,7 @@ After that, test by chat only:
 
 Expected behavior:
 
+- AI routes to GW/RPA/debug workflow automatically
 - AI routes first into one of two stack-layer skills: `ABACUS -> LibRPA` or `FHI-aims -> LibRPA`
 - AI then routes ABACUS cases into GW/RPA/debug workflow automatically
 - AI routes `FHI-aims + LibRPA` QSGW/G0W0 requests to the supplemental workflow when the request is based on existing FHI-aims case files or tasks such as `qsgw_band`

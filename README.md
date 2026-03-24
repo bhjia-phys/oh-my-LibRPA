@@ -226,8 +226,8 @@ oh-my-librpa/
 |   |-- oh-my-librpa-abacus-librpa/
 |   |-- abacus-librpa-gw/
 |   |-- abacus-librpa-rpa/
-|   |-- abacus-librpa-debug/
-|   `-- oh-my-librpa-fhi-aims-qsgw/
+|   |-- oh-my-librpa-fhi-aims-qsgw/
+|   `-- abacus-librpa-debug/
 |-- references/
 |-- rules/cards/
 |-- templates/
