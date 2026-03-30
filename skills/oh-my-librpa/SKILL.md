@@ -27,6 +27,11 @@ Do these steps in order:
 9. If server execution is chosen, also read `references/server-profiles.md` before submission.
 10. Before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
 11. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
+12. When the bundle clearly belongs to a specific upstream stack, route through the matching stack-layer skill before continuing:
+   - `skills/oh-my-librpa-abacus-librpa/` for `ABACUS -> LibRPA`
+   - `skills/oh-my-librpa-fhi-aims-qsgw/` for `FHI-aims -> LibRPA`
+13. For `ABACUS -> LibRPA`, let the stack-layer skill hand the case back into the existing `GW`, `RPA`, or `Debug` routes.
+14. For `FHI-aims -> LibRPA`, keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
 
 If the route is still ambiguous, ask the smallest possible clarification set.
 
@@ -38,6 +43,7 @@ Classify provided files into these groups:
 
 - `structure files`: `STRU`, `cif`, `xyz`, `geometry.in`
 - `input bundle`: `INPUT`, `INPUT_scf`, `INPUT_nscf`, `KPT`, `KPT_scf`, `KPT_nscf`, `librpa.in`
+- `fhi-aims bundle`: `control.in`, `geometry.in`, `run_librpa_gw_aims_iophr.sh`, `self_energy/`, `librpa.d/`
 - `symmetry sidecars`: `irreducible_sector.txt`, `symrot_R.txt`, `symrot_k.txt`, `symrot_abf_k.txt`
 - `workflow scripts`: `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`, `output_librpa.py`, `plot_gw_band_paper.py`, `env.sh`, `probe_batch.sh`
 - `basis/pseudopotential assets`: `.orb`, `.abfs`, `.upf`
@@ -48,6 +54,8 @@ Use these intake rules:
 
 - `structure files` -> generate or complete the workflow
 - `input bundle` -> audit and patch; do not rewrite blindly
+- `input bundle` that is clearly ABACUS-based -> hand off to `skills/oh-my-librpa-abacus-librpa/`
+- `fhi-aims bundle` -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`
 - `symmetry sidecars` -> keep them tied to the exact SCF that produced them; if one exists for periodic GW, verify the full required set before LibRPA
 - `.abfs` files -> treat as authoritative candidates for `ABFS_ORBITAL`
 - `logs/results` -> start in Debug mode first
@@ -97,6 +105,9 @@ Always do all of the following:
 - User asks for dielectric/response/RPA work -> route to `references/rpa-route.md`
 - User reports failure, weird output, parser/read issues, or mixed inputs -> route to `references/debug-route.md`
 - User provides logs before asking anything else -> route to `references/debug-route.md`
+- User provides ABACUS-style inputs such as `INPUT_scf`, `INPUT_nscf`, `KPT_*`, `STRU`, or ABACUS logs -> route to `skills/oh-my-librpa-abacus-librpa/`
+- User provides `control.in`, `run_librpa_gw_aims_iophr.sh`, `qsgw_band`, `qsgw_band0`, `modeA`, `modeB`, or an existing non-ABACUS case -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`
+- If a bundle mixes both ABACUS and FHI-aims markers, stop and ask which upstream stack owns the source of truth before editing anything.
 
 ## Safety rules
 
