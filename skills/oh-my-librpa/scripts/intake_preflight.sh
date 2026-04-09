@@ -202,20 +202,13 @@ fi
 if [[ "$resolved_mode" == "gw" && "$resolved_system_type" != "molecule" ]]; then
   [[ -f "$case_dir/INPUT_nscf" ]] || missing_items+=("INPUT_nscf")
   [[ -f "$case_dir/KPT_nscf" ]] || missing_items+=("KPT_nscf")
-  [[ -f "$case_dir/run_abacus.sh" ]] || missing_items+=("run_abacus.sh")
-  [[ -f "$case_dir/perform.sh" ]] || missing_items+=("perform.sh")
-  [[ -f "$case_dir/get_diel.py" ]] || missing_items+=("get_diel.py")
-  [[ -f "$case_dir/output_librpa.py" ]] || missing_items+=("output_librpa.py")
-  [[ -f "$case_dir/preprocess_abacus_for_librpa_band.py" ]] || missing_items+=("preprocess_abacus_for_librpa_band.py")
-elif [[ "$resolved_mode" == "gw" ]]; then
-  [[ -f "$case_dir/run_abacus.sh" ]] || missing_items+=("run_abacus.sh")
 fi
 if [[ "$compute_location" == "server" && -z "$ssh_target" ]]; then
   missing_items+=("ssh target")
 fi
 
 runnable_status="ready"
-if [[ "$files_status" == "blocked" || "$consistency_status" == "blocked" || "$connectivity_status" == "blocked" || "${#missing_items[@]}" -gt 0 ]]; then
+if [[ "$files_status" == "blocked" || "$consistency_status" == "blocked" || "$connectivity_status" == "blocked" ]]; then
   runnable_status="blocked"
 elif [[ "$connectivity_status" == "pending" || "$resolved_mode" == "unknown" || "$resolved_system_type" == "unknown" ]]; then
   runnable_status="pending"
@@ -223,7 +216,7 @@ fi
 
 next_step='Proceed with route-specific generation or execution.'
 if [[ "$runnable_status" == "blocked" ]]; then
-  next_step="Fill the missing items first: $(join_lines "${missing_items[@]-}")."
+  next_step="Fill the missing items first: $(join_lines "${missing_items[@]}")."
 elif [[ "$runnable_status" == "pending" ]]; then
   if [[ "$compute_location" == "server" && "$connectivity_status" != "ready" ]]; then
     next_step='Confirm VPN if needed, then run server connectivity/login checks.'

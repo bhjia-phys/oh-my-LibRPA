@@ -1,0 +1,71 @@
+- id: gw-flow-consistency-001
+  scene: ABACUS + LibRPA GW workflow
+  symptom: LibRPA input parsing/read failure or inconsistent outputs
+  root_cause: Inputs assembled from mixed directories or stale outputs remain
+  fix:
+    - Regenerate librpa inputs from the same ABACUS workflow outputs
+    - Run in a fresh directory
+    - Remove stale output artifacts before rerun
+    - Prefer a user-curated server-side reference bundle when available
+  verify:
+    - Confirm source paths for SCF/DF/NSCF are from one run chain
+    - Re-run minimal smoke with nfreq=16
+  applies_to:
+    abacus: ">=3.x"
+    librpa: ">=0.x"
+
+- id: shrink-abfs-coupling-002
+  scene: default GW workflow with shrink enabled
+  symptom: unstable/failed run due to missing or inconsistent shrink-related thresholds
+  root_cause: shrink_abfs should be enabled by default, but companion parameters are missing or misunderstood
+  fix:
+    - Set `use_shrink_abfs = t`
+    - Set `rpa 1`
+    - Set `exx_pca_threshold 10`
+    - Set `shrink_abfs_pca_thr 1e-4`
+    - Set `shrink_lu_inv_thr 1e-3`
+    - Set `exx_cs_inv_thr 1e-5`
+    - Require the user to specify `ABFS_ORBITAL` in `STRU`
+    - If the user provides `.abfs` files, use those filenames directly in `ABFS_ORBITAL`
+  verify:
+    - Check all coupled parameters exist and are parsed correctly
+    - Confirm shrink is enabled explicitly in `librpa.in`
+    - Confirm `ABFS_ORBITAL` exists in `STRU`
+    - Confirm referenced `.abfs` filenames exist in the working directory or specified path
+    - Perform short smoke test first
+  applies_to:
+    mode: gw
+
+- id: shrink-parameter-meaning-003
+  scene: user asks how shrink defaults should be interpreted
+  symptom: parameters are present but their roles are unclear
+  root_cause: shrink-related defaults encode different controls for compressed basis size, inversion stability, and external-input routing
+  fix:
+    - Treat `shrink_abfs_pca_thr = 1e-4` as the default control on compressed auxiliary-basis size
+    - Treat `shrink_lu_inv_thr = 1e-3` as the default control for inversion-error handling in output `sinvS`
+    - Treat `exx_pca_threshold = 10` as the switch meaning the large-basis path expects external input when shrink is enabled
+  verify:
+    - Explain each parameter role before changing it
+    - Only tune one shrink-related threshold at a time
+  applies_to:
+    mode: gw
+
+- id: periodic-gw-symmetry-004
+  scene: periodic ABACUS + LibRPA GW case with symmetry enabled
+  symptom: LibRPA misses symmetry reduction, reads stale sidecars, or disagrees with the intended symmetry-on/off comparison setup
+  root_cause: symmetry was not enabled consistently across SCF, NSCF, LibRPA, and sidecar staging
+  fix:
+    - Set `INPUT_scf` to `rpa 1` and `symmetry 1`
+    - Keep `INPUT_nscf` and any standalone band `INPUT` on `symmetry -1`
+    - Set `use_abacus_exx_symmetry = t` and `use_abacus_gw_symmetry = t` in `librpa.in`
+    - Require `irreducible_sector.txt`, `symrot_R.txt`, and `symrot_k.txt` from the same SCF
+    - When shrink is enabled, also require `symrot_abf_k.txt`
+    - Copy the sidecars from `OUT.ABACUS/` into the LibRPA working directory before preprocess and LibRPA
+    - Keep all non-symmetry parameters identical when comparing symmetry-on and symmetry-off runs
+  verify:
+    - Confirm the four sidecars exist after SCF in the symmetry lane
+    - Confirm the copied sidecars in the working directory are newer than the latest SCF start time
+    - Confirm `INPUT_nscf` still uses the full-k setup with `symmetry -1`
+    - Confirm `librpa.in` enables both EXX and GW symmetry flags
+  applies_to:
+    mode: gw

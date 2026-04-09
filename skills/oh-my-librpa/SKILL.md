@@ -26,7 +26,8 @@ Do these steps in order:
 8. Ask where execution should happen: local or server.
 9. Create a fresh isolated run directory before any real run.
 10. If the case needs PP/NAO/ABFS assets and the user did not provide a complete bundle, read `references/pp-nao-abfs-library.md` and select files from the bundled asset library.
-11. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
+11. If the user explicitly asks to regenerate ABFS, or if the bundled library does not contain the requested PP family / radius / orbital tier, also read `references/abfs-generation.md` and generate a matched auxiliary basis instead of substituting an approximate one.
+12. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
    - `references/gw-route.md`
    - `references/rpa-route.md`
    - `references/debug-route.md`
@@ -34,8 +35,9 @@ Do these steps in order:
 13. If server execution is chosen, also read `references/server-profiles.md` before submission.
 14. For `ABACUS -> LibRPA`, before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
 15. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
-16. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
-17. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
+16. When the user asks to plot periodic GW/EXX bands or compare occupied manifolds, load `rules/cards/periodic-gw-plotting.yml` before choosing any sorting or plotting logic.
+17. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
+18. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
 
 If the route is still ambiguous, ask the smallest possible clarification set.
 
@@ -63,7 +65,7 @@ Use these intake rules:
 - `fhi-aims strong markers` with no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`
 - `fhi-aims supporting markers` alone do not override ABACUS routing; ask only if ownership is still unclear after checking for strong markers
 - `symmetry sidecars` -> keep them tied to the exact SCF that produced them; if one exists for periodic GW, verify the full required set before LibRPA
-- `.abfs` files -> treat as authoritative candidates for `ABFS_ORBITAL`
+- `.abfs` files -> treat as authoritative candidates for `ABFS_ORBITAL` only after confirming that their element, radius cutoff, and angular-momentum coverage match the active PP / NAO setup
 - `logs/results` -> start in Debug mode first
 - `archives` -> unpack and classify before asking more questions
 
@@ -99,10 +101,13 @@ Always do all of the following:
 - For server smoke runs, start from the smallest batch payload that can print `pwd`, list files, and run one stage; do not add `.bashrc`, `conda`, `setvars.sh`, or `mpirun -np 1` unless a probe proves they are needed
 - On any server, remind the user to confirm that both `abacus_work` and `librpa_work` were compiled against the same latest LibRI that includes the nearest-fix bugfix; do not mix one side built against older LibRI
 - On `df_iopcas_ghj`, do not use `source ~/.bashrc` as the default Slurm batch entrypoint. In batch mode it can leave conda-injected paths without the intended oneAPI/module toolchain, or fail immediately with empty `slurm` output. Prefer explicit `module load cmake/3.31.7`, `module load oneapi/2024.2`, and compiler exports in the script itself
+- For server batch jobs that use `1 MPI rank/node`, default to the full core count of the allocated node for `--cpus-per-task` and `OMP_NUM_THREADS` unless the user explicitly asks for a smaller OpenMP layout
 - For ABACUS-side Coulomb validation, allow `SCF`-only runs; do not force `pyatb`, `NSCF`, or `LibRPA` if the user is only checking `coulomb_mat_*` / `coulomb_cut_*`
 - For ABACUS symmetry-on Coulomb validation, do not flatten-compare `symmetry=1` output with `symmetry=-1` output: symmetry-on exports IBZ q only, while symmetry-off exports the full BZ q-grid. Compare symmetry-on `mpi1` vs `mpiN` directly, compare Gamma/no-rotation blocks, or restore the full q-star before comparing to symmetry-off data
 - Apply route-aware static checks before remote submission
 - For reused or cloned case bundles, treat input-key compatibility as mandatory, not optional: run the preflight checker and patch deprecated ABACUS keywords before submitting
+- Treat ABACUS-side and LibRPA-side `shrink` as a workflow invariant on every host: if the bundle was generated with `ABFS_ORBITAL`, `Cs_shrinked_data_*`, or `shrink_sinvS_*`, then `librpa.in` must keep `use_shrink_abfs = t`; if the bundle was generated without shrink, then `librpa.in` must keep `use_shrink_abfs = f`
+- Never "fix" a shrink mismatch by editing only one side of the workflow; either reuse the original consistent bundle or regenerate the inconsistent stage cleanly
 - Report after every mini-stage: `what was done`, `what was observed`, `what is next`
 - Only enable heavy ABACUS Coulomb debug envs such as `ABACUS_DEBUG_CUT_MPI=1` for short targeted traces; they can distort runtime badly, especially on `shrink` + single-MPI control runs
 

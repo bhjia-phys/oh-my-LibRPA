@@ -1,0 +1,103 @@
+- id: gw-scf-success-601
+  scene: Judge whether ABACUS SCF finished successfully
+  symptom: Need a generic success signal after the SCF stage
+  root_cause: SCF completion should be judged from both log termination and durable output artifacts
+  fix:
+    - Check that `OUT.ABACUS/running_scf.log` exists
+    - Check that `running_scf.log` contains both `Finish Time` and `Total Time` (allow variable spacing between words)
+    - Check that `OUT.ABACUS/ABACUS-CHARGE-DENSITY.restart` exists
+  verify:
+    - Confirm the SCF log ends normally rather than with an error backtrace
+    - Confirm the charge-density restart file is non-empty
+  applies_to:
+    mode: gw
+    stage: scf
+
+- id: gw-pyatb-success-602
+  scene: Judge whether the pyatb dielectric-data stage finished successfully
+  symptom: Need a generic success signal after the `pyatb` stage
+  root_cause: pyatb success is best judged by the generated `pyatb_librpa_df` payload rather than a fragile single log string
+  fix:
+    - Check that the `pyatb_librpa_df` directory exists
+    - Check that `pyatb_librpa_df/band_out` exists
+    - Check that at least one `pyatb_librpa_df/KS_eigenvector_*.dat` file exists
+  verify:
+    - Confirm the directory is non-empty
+    - Confirm representative eigenvector files are non-zero size
+  applies_to:
+    mode: gw
+    stage: pyatb
+
+- id: gw-nscf-success-603
+  scene: Judge whether ABACUS NSCF finished successfully
+  symptom: Need a generic success signal after the NSCF stage
+  root_cause: NSCF completion should be judged from both log termination and band-oriented output artifacts
+  fix:
+    - Check that `OUT.ABACUS/running_nscf.log` exists
+    - Check that `running_nscf.log` contains both `Finish Time` and `Total Time` (allow variable spacing between words)
+    - Check that either `OUT.ABACUS/eig.txt` or `OUT.ABACUS/eig_occ.txt` exists
+  verify:
+    - Confirm the NSCF log ends normally rather than with an error backtrace
+    - Confirm `eig.txt` or `eig_occ.txt` is non-empty
+  applies_to:
+    mode: gw
+    stage: nscf
+
+- id: gw-preprocess-success-604
+  scene: Judge whether `preprocess_abacus_for_librpa_band.py` finished successfully
+  symptom: Need a generic success signal after band preprocessing
+  root_cause: Preprocess success is best judged from the presence of the direct preprocess products, not later plotting outputs
+  fix:
+    - Check that `band_kpath_info` exists in the working directory
+    - Check that at least one `band_KS_*` file exists
+    - Check that at least one `band_vxc*` file exists
+  verify:
+    - Confirm all generated files are non-empty
+  applies_to:
+    mode: gw
+    stage: preprocess
+
+- id: gw-librpa-success-605
+  scene: Judge whether LibRPA finished successfully for GW
+  symptom: Need a generic success signal for the long LibRPA stage
+  root_cause: Periodic and molecular GW routes finish with different final artifact sets
+  fix:
+    - Check that a rank-0 LibRPA output file exists, such as `librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`
+    - For the periodic GW route, check that the rank-0 output contains `Timer stop:  total.` or `libRPA finished successfully`, and that at least one `GW_band_spin_*.dat` file exists
+    - For the tested molecular short route, check that the rank-0 output contains `libRPA finished successfully` and that `band_out`, `vxc_out`, and at least one `coulomb_mat_*.txt` file exist
+  verify:
+    - Confirm the rank-0 output reaches the expected completion marker for the chosen route
+    - Confirm the route-specific final artifacts are non-empty
+  applies_to:
+    mode: gw
+    stage: librpa_success
+
+- id: gw-librpa-running-606
+  scene: Judge whether LibRPA is still running normally
+  symptom: LibRPA is the only stage in the standard GW chain that usually needs explicit running-state checks
+  root_cause: `pyatb` and `preprocess` are usually short, while LibRPA is long-running enough to require progress-aware monitoring
+  fix:
+    - Check that a rank-0 LibRPA output file exists, such as `librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`
+    - Check that the rank-0 output does not yet contain `Timer stop:  total.` or `libRPA finished successfully`
+    - Check that the rank-0 output file is still growing or has recent timestamp updates
+  verify:
+    - Confirm file modification time is recent relative to the current check
+    - Confirm new lines are being appended between checks
+  applies_to:
+    mode: gw
+    stage: librpa_running
+
+- id: gw-librpa-failed-607
+  scene: Judge whether LibRPA should be treated as failed
+  symptom: Need a simple failure decision without introducing extra states
+  root_cause: In the simplified workflow, any LibRPA state that is neither successful nor still progressing should be treated as failure
+  fix:
+    - If `Timer stop:  total.` or `libRPA finished successfully` exists and final GW band files exist, treat as success
+    - Else if the rank-0 output is still growing, treat as running
+    - Else treat the run as failed
+  verify:
+    - Confirm the run has no final completion marker
+    - Confirm the rank-0 output is no longer growing or no active output file exists
+  applies_to:
+    mode: gw
+    stage: librpa_failed

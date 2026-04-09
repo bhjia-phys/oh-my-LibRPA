@@ -16,8 +16,10 @@ Locate the failing stage first. Avoid broad blind modifications.
 ## Fast routing hints
 
 - parse/read errors such as `stod` -> check formatting and stale files first
-- `THE PARAMETER NAME ... IS INCORRECT!` -> run the compatibility audit first; suspect deprecated keys such as `exx_use_ewald` or `cs_inv_thr`
+- `ModuleNotFoundError: No module named 'output_librpa'` -> cloned periodic GW case is missing part of the helper quartet; restore `output_librpa.py` together with `perform.sh` / `get_diel.py`
+- `THE PARAMETER NAME ... IS INCORRECT!` -> run the compatibility audit first; suspect stale keys such as `exx_use_ewald`, `cs_inv_thr`, `exx_spencer_type`, or `out_bandgap`
 - abnormal result jumps -> check `nbands` against basis-size conventions first
+- absurd GW shifts or huge negative gaps -> check shrink synchronization first; this is a workflow invariant on every host, and a shrink-generated ABACUS bundle must not be reused with `librpa.in: use_shrink_abfs = f`
 - missing generated files -> check whether the route expects that stage at all before calling it a failure
 - server-only failures -> verify runtime profile, launcher, `python3`, and PATH assumptions
 - empty or nearly empty Slurm logs on `df` -> suspect batch bootstrap failure (`.bashrc`, conda hooks, `setvars.sh`) before suspecting ABACUS

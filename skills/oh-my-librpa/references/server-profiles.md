@@ -33,6 +33,7 @@ Prefer explicit values for:
 - MPI launcher path and flags
 - `.bashrc` / conda activation steps when the host depends on them
 - scheduler directives that affect node shape or environment loading
+- if the batch layout is `1 MPI rank/node`, the full node-core count for `--cpus-per-task` and `OMP_NUM_THREADS` unless the user explicitly requests an underfilled OpenMP layout
 
 If a site depends on shell init or conda activation, keep the tracked profile generic and prefer one of these patterns:
 

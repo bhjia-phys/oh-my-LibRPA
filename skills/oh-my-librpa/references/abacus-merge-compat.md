@@ -17,6 +17,8 @@ Apply these updates to generated or patched workflow inputs:
 - when the case uses explicit lattice vectors, set `latname = user_defined_lattice`
 - replace old `exx_use_ewald 1` with `exx_singularity_correction = massidda`
 - replace old `cs_inv_thr` with `exx_cs_inv_thr`
+- drop stale `exx_spencer_type`
+- drop invalid `out_bandgap`
 
 Do not keep both the old and new EXX keys in the same input.
 
@@ -28,6 +30,8 @@ Block submission if either file still contains:
 
 - `exx_use_ewald`
 - `cs_inv_thr`
+- `exx_spencer_type`
+- `out_bandgap`
 
 For any input file that actively sets `rpa 1`, require:
 
@@ -37,6 +41,12 @@ This rule is stage-local:
 
 - if `INPUT_scf` has `rpa 1`, require `massidda` there
 - if `INPUT_nscf` comments out `rpa`, do not force `massidda` there just for style
+
+For periodic hybrid-functional runs such as `HSE`, `PBE0`, or other non-`rpa` EXX jobs:
+
+- do not inherit the `massidda` requirement from the GW/RPA route just because the case also uses EXX
+- do not copy tiny test-lane values such as `exx_hybrid_step = 2` into a production SCF/NSCF run without re-checking convergence intent
+- if the user did not request a special hybrid stepping policy, prefer leaving `exx_hybrid_step` unset rather than forcing a short debug value
 
 ## Pair-correction lane
 

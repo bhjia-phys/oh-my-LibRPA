@@ -101,6 +101,8 @@ fi
 for script in \
   "$installed_root/update.sh" \
   "$installed_root/scripts/check_consistency.sh" \
+  "$installed_root/scripts/build_camg2n2_abfs_ladder.py" \
+  "$installed_root/scripts/generate_gaussian_aux_orb.py" \
   "$installed_root/scripts/intake_preflight.sh" \
   "$installed_root/scripts/materialize_batch_probe.sh" \
   "$installed_root/scripts/materialize_gw_template.sh" \
@@ -109,6 +111,7 @@ for script in \
   "$installed_root/scripts/run_gw_workflow.sh" \
   "$installed_root/scripts/run_rpa_workflow.sh" \
   "$installed_root/scripts/self_test.sh" \
+  "$installed_root/scripts/trim_abfs_channels.py" \
   "$installed_root/scripts/workflow_common.sh"; do
   if [[ -f "$script" ]]; then
     pass "Found script: $script"
@@ -117,17 +120,31 @@ for script in \
     continue
   fi
 
-  if bash -n "$script"; then
-    pass "bash -n passed: $script"
-  else
-    fail "bash -n failed: $script"
-  fi
+  if [[ "$script" == *.py ]]; then
+    if python3 -m py_compile "$script"; then
+      pass "py_compile passed: $script"
+    else
+      fail "py_compile failed: $script"
+    fi
 
-  if [[ "$script" != *"workflow_common.sh" ]]; then
-    if "$script" --help >/dev/null 2>&1; then
+    if python3 "$script" --help >/dev/null 2>&1; then
       pass "--help works: $script"
     else
       fail "--help failed: $script"
+    fi
+  else
+    if bash -n "$script"; then
+      pass "bash -n passed: $script"
+    else
+      fail "bash -n failed: $script"
+    fi
+
+    if [[ "$script" != *"workflow_common.sh" ]]; then
+      if "$script" --help >/dev/null 2>&1; then
+        pass "--help works: $script"
+      else
+        fail "--help failed: $script"
+      fi
     fi
   fi
 done
@@ -182,6 +199,325 @@ if "$installed_root/scripts/intake_preflight.sh" "$case_rpa" --mode rpa --system
   pass 'intake_preflight.sh produced a summary on a minimal RPA case'
 else
   fail 'intake_preflight.sh failed on a minimal RPA case'
+fi
+
+case_gw_missing_helper="$tmp_dir/gw-missing-helper"
+if "$installed_root/scripts/materialize_gw_template.sh" --case-dir "$case_gw_missing_helper" --system-type solid >/dev/null 2>&1; then
+  rm -f "$case_gw_missing_helper/get_diel.py"
+  if preflight_output="$("$installed_root/scripts/intake_preflight.sh" "$case_gw_missing_helper" --mode gw --system-type solid 2>&1)"; then
+    if grep -q 'runnable badge: blocked' <<<"$preflight_output" \
+      && grep -q 'missing items: get_diel.py' <<<"$preflight_output"; then
+      pass 'intake_preflight.sh blocks a solid GW case when get_diel.py is missing'
+    else
+      fail 'intake_preflight.sh did not report blocked/missing get_diel.py on a solid GW case'
+    fi
+  else
+    fail 'intake_preflight.sh crashed instead of reporting missing get_diel.py on a solid GW case'
+  fi
+else
+  fail 'materialize_gw_template.sh failed to prepare the solid GW regression case'
+fi
+
+case_gw_missing_output="$tmp_dir/gw-missing-output-helper"
+if "$installed_root/scripts/materialize_gw_template.sh" --case-dir "$case_gw_missing_output" --system-type solid >/dev/null 2>&1; then
+  rm -f "$case_gw_missing_output/output_librpa.py"
+  if preflight_output="$("$installed_root/scripts/intake_preflight.sh" "$case_gw_missing_output" --mode gw --system-type solid 2>&1)"; then
+    if grep -q 'runnable badge: blocked' <<<"$preflight_output" \
+      && grep -q 'missing items: output_librpa.py' <<<"$preflight_output"; then
+      pass 'intake_preflight.sh blocks a solid GW case when output_librpa.py is missing'
+    else
+      fail 'intake_preflight.sh did not report blocked/missing output_librpa.py on a solid GW case'
+    fi
+  else
+    fail 'intake_preflight.sh crashed instead of reporting missing output_librpa.py on a solid GW case'
+  fi
+else
+  fail 'materialize_gw_template.sh failed to prepare the output_librpa.py regression case'
+fi
+
+gaussian_in="$tmp_dir/base.orb"
+gaussian_out="$tmp_dir/base-aux.orb"
+cat <<'EOF' > "$gaussian_in"
+---------------------------------------------------------------------------
+Element                     X
+Energy Cutoff(Ry)           100
+Radius Cutoff(a.u.)         10
+Lmax                        2
+Number of Sorbital-->       1
+Number of Porbital-->       1
+Number of Dorbital-->       1
+---------------------------------------------------------------------------
+SUMMARY  END
+
+Mesh                        101
+dr                          0.1
+                Type               L               N
+                   0               0               0
+EOF
+python3 - "$gaussian_in" <<'PY'
+from math import exp
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+with path.open("a", encoding="utf-8") as fh:
+    for idx in range(101):
+        r = idx * 0.1
+        value = exp(-r)
+        fh.write(f"   {value:.14e}")
+        if (idx + 1) % 4 == 0:
+            fh.write("\n")
+    fh.write("\n")
+    fh.write("                Type               L               N\n")
+    fh.write("                   0               1               0\n")
+    for idx in range(101):
+        r = idx * 0.1
+        value = r * exp(-r)
+        fh.write(f"   {value:.14e}")
+        if (idx + 1) % 4 == 0:
+            fh.write("\n")
+    fh.write("\n")
+    fh.write("                Type               L               N\n")
+    fh.write("                   0               2               0\n")
+    for idx in range(101):
+        r = idx * 0.1
+        value = (r ** 2) * exp(-0.5 * r * r)
+        fh.write(f"   {value:.14e}")
+        if (idx + 1) % 4 == 0:
+            fh.write("\n")
+    fh.write("\n")
+PY
+
+if python3 "$installed_root/scripts/generate_gaussian_aux_orb.py" \
+  --input "$gaussian_in" \
+  --output "$gaussian_out" \
+  >/dev/null 2>&1; then
+  if python3 - "$gaussian_out" <<'PY'
+from pathlib import Path
+import sys
+
+text = Path(sys.argv[1]).read_text()
+required = [
+    "Number of Forbital-->       1",
+    "Number of Gorbital-->       1",
+    "Lmax                        4",
+]
+for marker in required:
+    if marker not in text:
+        raise SystemExit(1)
+PY
+  then
+    pass 'generate_gaussian_aux_orb.py appended smooth F/G channels to a minimal orbitals file'
+  else
+    fail 'generate_gaussian_aux_orb.py output is missing the expected F/G header markers'
+  fi
+else
+  fail 'generate_gaussian_aux_orb.py smoke test failed'
+fi
+
+trim_in="$tmp_dir/base.abfs"
+trim_out="$tmp_dir/base-trimmed.abfs"
+cat <<'EOF' > "$trim_in"
+---------------------------------------------------------------------------
+Element                     X
+Energy Cutoff(Ry)           100
+Radius Cutoff(a.u.)         10
+Lmax                        6
+Number of Sorbital-->       2
+Number of Porbital-->       2
+Number of Dorbital-->       1
+Number of Forbital-->       1
+Number of Gorbital-->       1
+Number of Horbital-->       1
+Number of Iorbital-->       1
+---------------------------------------------------------------------------
+SUMMARY  END
+
+Mesh                        5
+dr                          0.1
+EOF
+python3 - "$trim_in" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+channels = [
+    (0, 0),
+    (0, 1),
+    (1, 0),
+    (1, 1),
+    (2, 0),
+    (3, 0),
+    (4, 0),
+    (5, 0),
+    (6, 0),
+]
+with path.open("a", encoding="utf-8") as fh:
+    for l_value, n_value in channels:
+        fh.write("                Type               L               N\n")
+        fh.write(f"                   0               {l_value}               {n_value}\n")
+        base = 10 * l_value + n_value
+        values = [base + step for step in range(5)]
+        for start in range(0, len(values), 4):
+            chunk = values[start : start + 4]
+            fh.write("".join(f"   {value:.14e}" for value in chunk))
+            fh.write("\n")
+        fh.write("\n")
+PY
+
+if python3 "$installed_root/scripts/trim_abfs_channels.py" \
+  --input "$trim_in" \
+  --output "$trim_out" \
+  --count 0=1 \
+  --count 1=2 \
+  --count 2=1 \
+  --count 3=1 \
+  --count 4=0 \
+  --count 5=1 \
+  --count 6=0 \
+  >/dev/null 2>&1; then
+  if python3 - "$trim_out" <<'PY'
+from pathlib import Path
+import sys
+
+text = Path(sys.argv[1]).read_text()
+required = [
+    "Lmax                        5",
+    "Number of Sorbital-->       1",
+    "Number of Porbital-->       2",
+    "Number of Dorbital-->       1",
+    "Number of Forbital-->       1",
+    "Number of Gorbital-->       0",
+    "Number of Horbital-->       1",
+]
+for marker in required:
+    if marker not in text:
+        raise SystemExit(1)
+if "Number of Iorbital" in text:
+    raise SystemExit(1)
+if "                   0               0               1" in text:
+    raise SystemExit(1)
+if "                   0               4               0" in text:
+    raise SystemExit(1)
+if "                   0               6               0" in text:
+    raise SystemExit(1)
+PY
+  then
+    pass 'trim_abfs_channels.py rewrote counts, Lmax, and retained the requested leading channels'
+  else
+    fail 'trim_abfs_channels.py output did not match the requested ABFS channel counts'
+  fi
+else
+  fail 'trim_abfs_channels.py smoke test failed'
+fi
+
+ladder_base="$tmp_dir/ladder-base"
+ladder_full="$tmp_dir/ladder-full"
+mkdir -p "$ladder_base" "$ladder_full"
+python3 - "$ladder_base" "$ladder_full" <<'PY'
+from pathlib import Path
+import sys
+
+base_dir = Path(sys.argv[1])
+full_dir = Path(sys.argv[2])
+
+files = {
+    "base": {
+        "Ca": {0: 11, 1: 9, 2: 8, 3: 5, 4: 3},
+        "Mg": {0: 12, 1: 9, 2: 8, 3: 4, 4: 3},
+        "N": {0: 9, 1: 7, 2: 7, 3: 5, 4: 3},
+    },
+    "full": {
+        "Ca": {0: 12, 1: 9, 2: 10, 3: 8, 4: 6, 5: 3, 6: 3, 7: 1, 8: 1},
+        "Mg": {0: 12, 1: 10, 2: 10, 3: 7, 4: 6, 5: 3, 6: 3, 7: 1, 8: 1},
+        "N": {0: 8, 1: 8, 2: 8, 3: 7, 4: 5, 5: 3, 6: 3, 7: 1, 8: 1},
+    },
+}
+
+def write_abfs(path: Path, element: str, counts: dict[int, int]) -> None:
+    mesh = 5
+    lines = [
+        "---------------------------------------------------------------------------",
+        f"Element                     {element}",
+        "Energy Cutoff(Ry)           100",
+        "Radius Cutoff(a.u.)         10",
+        f"Lmax                        {max(counts)}",
+    ]
+    labels = "SPDFGHIJK"
+    for l_value in range(max(counts) + 1):
+        lines.append(f"Number of {labels[l_value]}orbital-->       {counts.get(l_value, 0)}")
+    lines.extend(
+        [
+            "---------------------------------------------------------------------------",
+            "SUMMARY  END",
+            "",
+            f"Mesh                        {mesh}",
+            "dr                          0.1",
+        ]
+    )
+    for l_value in sorted(counts):
+        for n_value in range(counts[l_value]):
+            lines.append("                Type               L               N")
+            lines.append(f"                   0               {l_value}               {n_value}")
+            base = 100 * l_value + 10 * n_value
+            values = [base + step for step in range(mesh)]
+            for start in range(0, len(values), 4):
+                chunk = values[start : start + 4]
+                lines.append("".join(f"   {value:.14e}" for value in chunk))
+            lines.append("")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+for family, root in (("base", base_dir), ("full", full_dir)):
+    for element, counts in files[family].items():
+        write_abfs(root / f"{element}_{family}.abfs", element, counts)
+PY
+
+if ladder_output="$(python3 "$installed_root/scripts/build_camg2n2_abfs_ladder.py" \
+  --base-dir "$ladder_base" \
+  --full-dir "$ladder_full" \
+  --dry-run 2>/dev/null)"; then
+  if grep -q '"G1"' <<<"$ladder_output" \
+    && grep -q '"estimated_cell_size": 780' <<<"$ladder_output" \
+    && grep -q '"estimated_cell_size": 923' <<<"$ladder_output" \
+    && grep -q '"estimated_cell_size": 1283' <<<"$ladder_output" \
+    && grep -q '"estimated_cell_size": 1358' <<<"$ladder_output"; then
+    pass 'build_camg2n2_abfs_ladder.py reports the approved G1-G4 synchronized stage sizes'
+  else
+    fail 'build_camg2n2_abfs_ladder.py dry-run output is missing the approved G1-G4 stage sizes'
+  fi
+else
+  fail 'build_camg2n2_abfs_ladder.py dry-run failed'
+fi
+
+ladder_written="$tmp_dir/ladder-written"
+if python3 "$installed_root/scripts/build_camg2n2_abfs_ladder.py" \
+  --base-dir "$ladder_base" \
+  --full-dir "$ladder_full" \
+  --output-root "$ladder_written" \
+  --stage G1 >/dev/null 2>&1; then
+  if python3 - "$ladder_written/G1/N_full_G1_151.abfs" <<'PY'
+from pathlib import Path
+import sys
+
+text = Path(sys.argv[1]).read_text()
+required = [
+    "Number of Sorbital-->       9",
+    "Number of Porbital-->       8",
+    "Number of Dorbital-->       8",
+    "Number of Forbital-->       6",
+    "Number of Gorbital-->       4",
+]
+for marker in required:
+    if marker not in text:
+        raise SystemExit(1)
+PY
+  then
+    pass 'build_camg2n2_abfs_ladder.py preserves baseline-leading channels when the large endpoint is smaller'
+  else
+    fail 'build_camg2n2_abfs_ladder.py did not preserve baseline-leading channels when the large endpoint is smaller'
+  fi
+else
+  fail 'build_camg2n2_abfs_ladder.py file generation failed on the baseline-fallback regression case'
 fi
 
 case_gw="$tmp_dir/gw-molecule-short"
@@ -284,6 +620,51 @@ if command -v python3 >/dev/null 2>&1; then
   fi
 else
   pass 'python3 not available for plot_gw_band_paper.py bytecode compilation; skipped'
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  plot_script="$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py"
+  if python3 - <<EOF >/dev/null 2>&1
+import importlib.util
+from pathlib import Path
+import numpy as np
+
+path = Path("$plot_script")
+spec = importlib.util.spec_from_file_location("plot_gw_band_paper", path)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+aux = np.array([
+    [10.0, 20.0, 30.0, 40.0, 50.0],
+    [11.0, 21.0, 31.0, 41.0, 51.0],
+])
+ene = np.array([
+    [-5.0, -0.2,  9.5,  0.7, 15.0],
+    [-5.1, -0.1, 10.5,  0.6, 15.1],
+])
+
+aux_sorted, ene_sorted = mod.sort_gw_bands_in_window(aux, ene, 1, 4)
+
+assert np.allclose(ene_sorted[:, 0], ene[:, 0])
+assert np.allclose(ene_sorted[:, 4], ene[:, 4])
+assert np.allclose(aux_sorted[:, 0], aux[:, 0])
+assert np.allclose(aux_sorted[:, 4], aux[:, 4])
+assert np.allclose(ene_sorted[:, 1:4], np.array([
+    [-0.2, 0.7, 9.5],
+    [-0.1, 0.6, 10.5],
+]))
+assert np.allclose(aux_sorted[:, 1:4], np.array([
+    [20.0, 40.0, 30.0],
+    [21.0, 41.0, 31.0],
+]))
+EOF
+  then
+    pass 'plot_gw_band_paper.py can reorder only a selected near-Fermi band window without touching outer bands'
+  else
+    fail 'plot_gw_band_paper.py failed the near-Fermi-only band reordering regression test'
+  fi
+else
+  pass 'python3 not available for plot_gw_band_paper.py near-Fermi-only reordering regression test; skipped'
 fi
 
 plot_case="$tmp_dir/plot-case"
