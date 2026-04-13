@@ -15,7 +15,8 @@ parallel_routing = libri
 vq_threshold = 0
 sqrt_coulomb_threshold = 0
 use_fullcoul_exx = t
-output_gw_sigc_mat_rf = t
+# Keep disabled by default. Enable only for explicit NSCF band-continuation requests.
+output_gw_sigc_mat_rf = f
 
 libri_chi0_threshold_C = 1e-4
 libri_chi0_threshold_G = 1e-5

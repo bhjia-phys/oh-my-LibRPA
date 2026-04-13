@@ -9,13 +9,16 @@ Usage:
     --system-type <molecule|solid|2D> \
     [--needs-nscf <auto|true|false>] \
     [--needs-pyatb <auto|true|false>] \
-    [--use-shrink-abfs <auto|true|false>]
+    [--use-shrink-abfs <auto|true|false>] \
+    [--enable-nscf-band-continuation <auto|true|false>]
 
 Behavior:
   - Materializes a GW case directory from the installed template assets
   - Hard-selects the dedicated molecular short-route template when the route is:
       molecule + no NSCF + no pyatb + no shrink
   - Falls back to the generic periodic GW baseline otherwise
+  - Keeps `output_gw_sigc_mat_rf` disabled by default
+  - Enables `output_gw_sigc_mat_rf` only when explicit NSCF band continuation is requested
   - Writes the selected route to .oh-my-librpa-route.env inside the case dir
 
 Safety:
@@ -65,6 +68,39 @@ copy_dir_contents() {
   cp -R "$src/." "$dest/"
 }
 
+set_librpa_bool() {
+  local file="$1"
+  local key="$2"
+  local raw_value="$3"
+  local normalized=""
+  local tmp_file=""
+
+  [[ -f "$file" ]] || fail "librpa input file not found: $file"
+
+  case "$raw_value" in
+    true) normalized="t" ;;
+    false) normalized="f" ;;
+    *) fail "unsupported librpa boolean value: $raw_value" ;;
+  esac
+
+  tmp_file="$(mktemp)"
+  awk -v key="$key" -v normalized="$normalized" '
+    BEGIN { replaced = 0 }
+    $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
+      print key " = " normalized
+      replaced = 1
+      next
+    }
+    { print }
+    END {
+      if (!replaced) {
+        print key " = " normalized
+      }
+    }
+  ' "$file" > "$tmp_file"
+  mv "$tmp_file" "$file"
+}
+
 overlay_route_files() {
   local route_dir="$1"
   local case_dir="$2"
@@ -91,6 +127,7 @@ system_type=""
 needs_nscf="auto"
 needs_pyatb="auto"
 use_shrink_abfs="auto"
+enable_nscf_band_continuation="auto"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -99,6 +136,7 @@ while [[ $# -gt 0 ]]; do
     --needs-nscf) needs_nscf="$2"; shift 2 ;;
     --needs-pyatb) needs_pyatb="$2"; shift 2 ;;
     --use-shrink-abfs) use_shrink_abfs="$2"; shift 2 ;;
+    --enable-nscf-band-continuation) enable_nscf_band_continuation="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *)
       echo "Unknown argument: $1" >&2
@@ -122,6 +160,7 @@ esac
 needs_nscf="$(normalize_bool "$needs_nscf")"
 needs_pyatb="$(normalize_bool "$needs_pyatb")"
 use_shrink_abfs="$(normalize_bool "$use_shrink_abfs")"
+enable_nscf_band_continuation="$(normalize_bool "$enable_nscf_band_continuation")"
 
 if [[ "$system_type" == "molecule" ]]; then
   [[ "$needs_nscf" == auto ]] && needs_nscf=false
@@ -131,6 +170,12 @@ else
   [[ "$needs_nscf" == auto ]] && needs_nscf=true
   [[ "$needs_pyatb" == auto ]] && needs_pyatb=true
   [[ "$use_shrink_abfs" == auto ]] && use_shrink_abfs=true
+fi
+
+[[ "$enable_nscf_band_continuation" == auto ]] && enable_nscf_band_continuation=false
+
+if [[ "$enable_nscf_band_continuation" == true && "$needs_nscf" != true ]]; then
+  fail "NSCF band continuation requires an NSCF-enabled GW route"
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -160,6 +205,8 @@ if [[ -n "$route_dir" ]]; then
   overlay_route_files "$route_dir" "$case_dir"
 fi
 
+set_librpa_bool "$case_dir/librpa.in" "output_gw_sigc_mat_rf" "$enable_nscf_band_continuation"
+
 if [[ "$route_id" == "molecule-gw-no-nscf-no-pyatb-no-shrink" ]]; then
   rm -f \
     "$case_dir/INPUT_nscf" \
@@ -185,6 +232,7 @@ workflow_helper_bundle='get_diel.py;perform.sh;preprocess_abacus_for_librpa_band
   printf 'OH_MY_LIBRPA_NEEDS_NSCF=%q\n' "$needs_nscf"
   printf 'OH_MY_LIBRPA_NEEDS_PYATB=%q\n' "$needs_pyatb"
   printf 'OH_MY_LIBRPA_USE_SHRINK_ABFS=%q\n' "$use_shrink_abfs"
+  printf 'OH_MY_LIBRPA_ENABLE_NSCF_BAND_CONTINUATION=%q\n' "$enable_nscf_band_continuation"
   printf 'OH_MY_LIBRPA_REFERENCE_TEMPLATE=%q\n' "$reference_template"
   printf 'OH_MY_LIBRPA_WORKFLOW_HELPER_BUNDLE=%q\n' "$workflow_helper_bundle"
   printf 'OH_MY_LIBRPA_ROUTE_NOTE=%q\n' "$route_note"
@@ -196,6 +244,7 @@ SYSTEM_TYPE=$system_type
 NEEDS_NSCF=$needs_nscf
 NEEDS_PYATB=$needs_pyatb
 USE_SHRINK_ABFS=$use_shrink_abfs
+ENABLE_NSCF_BAND_CONTINUATION=$enable_nscf_band_continuation
 REFERENCE_TEMPLATE=$reference_template
 CASE_DIR=$case_dir
 NOTE=$route_note

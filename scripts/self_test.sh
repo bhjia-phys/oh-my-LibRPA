@@ -203,6 +203,12 @@ fi
 
 case_gw_missing_helper="$tmp_dir/gw-missing-helper"
 if "$installed_root/scripts/materialize_gw_template.sh" --case-dir "$case_gw_missing_helper" --system-type solid >/dev/null 2>&1; then
+  if grep -q '^output_gw_sigc_mat_rf = f$' "$case_gw_missing_helper/librpa.in"; then
+    pass 'solid GW baseline keeps output_gw_sigc_mat_rf disabled by default'
+  else
+    fail 'solid GW baseline still enables output_gw_sigc_mat_rf by default'
+  fi
+
   rm -f "$case_gw_missing_helper/get_diel.py"
   if preflight_output="$("$installed_root/scripts/intake_preflight.sh" "$case_gw_missing_helper" --mode gw --system-type solid 2>&1)"; then
     if grep -q 'runnable badge: blocked' <<<"$preflight_output" \
@@ -233,6 +239,21 @@ if "$installed_root/scripts/materialize_gw_template.sh" --case-dir "$case_gw_mis
   fi
 else
   fail 'materialize_gw_template.sh failed to prepare the output_librpa.py regression case'
+fi
+
+case_gw_nscf_band_continuation="$tmp_dir/gw-nscf-band-continuation"
+if "$installed_root/scripts/materialize_gw_template.sh" \
+  --case-dir "$case_gw_nscf_band_continuation" \
+  --system-type solid \
+  --enable-nscf-band-continuation true >/dev/null 2>&1; then
+  if grep -q '^output_gw_sigc_mat_rf = t$' "$case_gw_nscf_band_continuation/librpa.in" \
+    && grep -q '^OH_MY_LIBRPA_ENABLE_NSCF_BAND_CONTINUATION=.*true' "$case_gw_nscf_band_continuation/.oh-my-librpa-route.env"; then
+    pass 'NSCF band-continuation requests explicitly enable output_gw_sigc_mat_rf'
+  else
+    fail 'NSCF band-continuation materialization did not record or enable output_gw_sigc_mat_rf'
+  fi
+else
+  fail 'materialize_gw_template.sh failed on the explicit NSCF band-continuation route'
 fi
 
 gaussian_in="$tmp_dir/base.orb"

@@ -40,7 +40,7 @@ Set or verify these `librpa.in` defaults unless a stronger empirical rule overri
 - `vq_threshold = 0`
 - `sqrt_coulomb_threshold = 0`
 - `use_fullcoul_exx = t`
-- `output_gw_sigc_mat_rf = t`
+- `output_gw_sigc_mat_rf = f`
 - `libri_chi0_threshold_C = 1e-4`
 - `libri_chi0_threshold_G = 1e-5`
 - `libri_exx_threshold_V = 1e-1`
@@ -49,6 +49,9 @@ Set or verify these `librpa.in` defaults unless a stronger empirical rule overri
 - `libri_g0w0_threshold_C = 1e-5`
 - `libri_g0w0_threshold_G = 1e-5`
 - `libri_g0w0_threshold_Wc = 1e-6`
+
+Only flip `output_gw_sigc_mat_rf` to `t` when the user explicitly asks to open NSCF band continuation.
+When materializing a fresh GW case for that request, pass `--enable-nscf-band-continuation true`.
 
 - for template-generated inputs that use explicit lattice vectors, set `latname = user_defined_lattice`
 
@@ -112,6 +115,7 @@ Required settings and checks:
 - use official ABACUS input names
 - do not run `pyatb`
 - set `replace_w_head = f`
+- keep `output_gw_sigc_mat_rf = f`
 - for the tested short smoke path, materialize the route with:
   - `scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
 - keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, `exx_cs_inv_thr 1e-5`
@@ -130,6 +134,7 @@ Required checks and stages:
 - prefer the updated `get_diel.py` and `preprocess_abacus_for_librpa_band.py` copies that match the merged ABACUS branch; do not fall back to stale helpers that assume only legacy `EFERMI` parsing or one fixed wavefunction filename pattern
 - treat the periodic GW helper quartet as inseparable: `perform.sh`, `get_diel.py`, `output_librpa.py`, and `preprocess_abacus_for_librpa_band.py`
 - when cloning a prior GW case into a fresh run directory, copy the full helper quartet together or re-materialize it from the template; never copy only a subset
+- only enable `output_gw_sigc_mat_rf = t` when the user explicitly asks to open NSCF band continuation; for a materialized case, pass `--enable-nscf-band-continuation true`
 - after SCF, run `pyatb` to generate `pyatb_librpa_df`
 - then run NSCF
 - then run `preprocess_abacus_for_librpa_band.py`
