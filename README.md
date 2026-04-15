@@ -263,7 +263,7 @@ oh-my-librpa/
 
 ## AITP integration
 
-oh-my-LibRPA is the **domain skill** for the [AITP Research Protocol](https://github.com/AroundPeking/AITP-Research-Protocol) — a protocol-first research runtime that turns AI agents into disciplined physics collaborators.
+oh-my-LibRPA is the **domain skill** for the [AITP Research Protocol](https://github.com/bhjia-phys/AITP-Research-Protocol) — a protocol-first research runtime that turns AI agents into disciplined physics collaborators.
 
 - **AITP manages the research lifecycle** (projects, layers, gates, human interaction).
 - **oh-my-LibRPA provides the domain knowledge** (contracts, operations, invariants, routing).

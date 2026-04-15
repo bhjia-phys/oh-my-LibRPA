@@ -1,7 +1,7 @@
 # AITP Integration
 
 This document describes how **oh-my-LibRPA** integrates with the
-[AITP Research Protocol](https://github.com/AroundPeking/AITP-Research-Protocol).
+[AITP Research Protocol](https://github.com/bhjia-phys/AITP-Research-Protocol).
 
 ---
 
@@ -98,7 +98,7 @@ Phase 7: Production Readiness     →  Merge + L2 promotion
 reference its equation from the approved LaTeX derivation.
 
 See the full playbook at:
-[AITP FEATURE_DEVELOPMENT_PLAYBOOK.md](https://github.com/AroundPeking/AITP-Research-Protocol/blob/main/research/knowledge-hub/FEATURE_DEVELOPMENT_PLAYBOOK.md)
+[AITP FEATURE_DEVELOPMENT_PLAYBOOK.md](https://github.com/bhjia-phys/AITP-Research-Protocol/blob/main/research/knowledge-hub/FEATURE_DEVELOPMENT_PLAYBOOK.md)
 
 ---
 
@@ -121,8 +121,8 @@ See the full playbook at:
 
 ## Quick reference
 
-- **AITP repository**: <https://github.com/AroundPeking/AITP-Research-Protocol>
-- **Domain protocol**: [FIRST_PRINCIPLES_LANE_PROTOCOL.md](https://github.com/AroundPeking/AITP-Research-Protocol/blob/main/research/knowledge-hub/FIRST_PRINCIPLES_LANE_PROTOCOL.md)
-- **Domain skill interface**: [DOMAIN_SKILL_INTERFACE_PROTOCOL.md](https://github.com/AroundPeking/AITP-Research-Protocol/blob/main/research/knowledge-hub/DOMAIN_SKILL_INTERFACE_PROTOCOL.md)
-- **Feature development playbook**: [FEATURE_DEVELOPMENT_PLAYBOOK.md](https://github.com/AroundPeking/AITP-Research-Protocol/blob/main/research/knowledge-hub/FEATURE_DEVELOPMENT_PLAYBOOK.md)
-- **Project structure convention**: [PROJECT_STRUCTURE_CONVENTION.md](https://github.com/AroundPeking/AITP-Research-Protocol/blob/main/research/knowledge-hub/PROJECT_STRUCTURE_CONVENTION.md)
+- **AITP repository**: <https://github.com/bhjia-phys/AITP-Research-Protocol>
+- **Domain protocol**: [FIRST_PRINCIPLES_LANE_PROTOCOL.md](https://github.com/bhjia-phys/AITP-Research-Protocol/blob/main/research/knowledge-hub/FIRST_PRINCIPLES_LANE_PROTOCOL.md)
+- **Domain skill interface**: [DOMAIN_SKILL_INTERFACE_PROTOCOL.md](https://github.com/bhjia-phys/AITP-Research-Protocol/blob/main/research/knowledge-hub/DOMAIN_SKILL_INTERFACE_PROTOCOL.md)
+- **Feature development playbook**: [FEATURE_DEVELOPMENT_PLAYBOOK.md](https://github.com/bhjia-phys/AITP-Research-Protocol/blob/main/research/knowledge-hub/FEATURE_DEVELOPMENT_PLAYBOOK.md)
+- **Project structure convention**: [PROJECT_STRUCTURE_CONVENTION.md](https://github.com/bhjia-phys/AITP-Research-Protocol/blob/main/research/knowledge-hub/PROJECT_STRUCTURE_CONVENTION.md)
