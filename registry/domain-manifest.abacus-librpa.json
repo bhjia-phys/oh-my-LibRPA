@@ -1,0 +1,173 @@
+{
+  "domain_id": "abacus-librpa",
+  "display_name": "ABACUS + LibRPA First-Principles",
+  "version": "0.1.0",
+  "description": "First-principles calculations with ABACUS and LibRPA: GW quasiparticle band structures, RPA correlation energies, and related post-DFT workflows for molecules, solids, and 2D materials.",
+  "target_codes": ["abacus", "librpa", "libri", "libcomm", "pyatb"],
+  "system_types": ["molecule", "solid", "2D"],
+  "computation_types": ["gw", "rpa"],
+  "operations": [
+    {
+      "name": "gw_workflow",
+      "family": "computation",
+      "description": "SCF → DF → NSCF → LibRPA GW chain for quasiparticle band structures",
+      "phases": ["P", "4", "5"],
+      "required_contracts": ["computation-workflow", "compute-resource"]
+    },
+    {
+      "name": "rpa_workflow",
+      "family": "computation",
+      "description": "SCF → DF → LibRPA RPA chain for correlation energies",
+      "phases": ["P", "4", "5"],
+      "required_contracts": ["computation-workflow", "compute-resource"]
+    },
+    {
+      "name": "debug_workflow",
+      "family": "computation",
+      "description": "Failure diagnosis and repair for ABACUS/LibRPA computations",
+      "phases": ["6"],
+      "required_contracts": ["calculation-debug", "computation-workflow"]
+    },
+    {
+      "name": "feature_development",
+      "family": "development",
+      "description": "New feature implementation in ABACUS, LibRPA, LibRI, LibComm, or pyatb",
+      "phases": ["0", "1", "2", "3", "4", "5", "6", "7"],
+      "required_contracts": ["development-task", "computation-workflow", "benchmark-report"]
+    },
+    {
+      "name": "build_workflow",
+      "family": "development",
+      "description": "Compilation and toolchain setup for first-principles codes",
+      "phases": ["2", "4"],
+      "required_contracts": ["development-task", "compute-resource"]
+    },
+    {
+      "name": "benchmark_workflow",
+      "family": "development",
+      "description": "Numerical validation of new features against reference values",
+      "phases": ["5", "7"],
+      "required_contracts": ["benchmark-report", "computation-workflow", "development-task"]
+    }
+  ],
+  "contracts": [
+    {
+      "name": "computation-workflow",
+      "schema_path": "schemas/computation-workflow.schema.json",
+      "purpose": "Define and track the full SCF→DF→NSCF→LibRPA computation chain",
+      "used_in_phases": [4, 5, 6]
+    },
+    {
+      "name": "development-task",
+      "schema_path": "schemas/development-task.schema.json",
+      "purpose": "Track software feature development with code location, build config, and validation criteria",
+      "used_in_phases": [2, 3, 7]
+    },
+    {
+      "name": "calculation-debug",
+      "schema_path": "schemas/calculation-debug.schema.json",
+      "purpose": "Record failure diagnosis, root cause, fix actions, and learned knowledge",
+      "used_in_phases": [6]
+    },
+    {
+      "name": "compute-resource",
+      "schema_path": "schemas/compute-resource.schema.json",
+      "purpose": "Specify compute server, MPI configuration, and toolchain details",
+      "used_in_phases": [2, 4, 5]
+    },
+    {
+      "name": "benchmark-report",
+      "schema_path": "schemas/benchmark-report.schema.json",
+      "purpose": "Report benchmark results with test systems, convergence data, and pass/fail verdict",
+      "used_in_phases": [5, 7]
+    }
+  ],
+  "invariants": [
+    {
+      "id": "shrink_consistency",
+      "description": "ABFS_ORBITAL files must be present if and only if use_shrink_abfs is true in librpa.in",
+      "failure_mode": "LibRPA reads wrong auxiliary basis, produces incorrect polarizability",
+      "check_method": "Compare ABFS file listing against librpa.in use_shrink_abfs field"
+    },
+    {
+      "id": "same_libri",
+      "description": "ABACUS and LibRPA must be compiled against the same LibRI version",
+      "failure_mode": "ABI mismatch causes silent data corruption or crashes",
+      "check_method": "Compare LibRI_VERSION in ABACUS and LibRPA build logs"
+    },
+    {
+      "id": "keyword_compat",
+      "description": "Deprecated ABACUS keywords must not appear in INPUT files",
+      "failure_mode": "Unexpected behavior or ignored parameters",
+      "check_method": "Scan INPUT against deprecated keyword list per ABACUS version"
+    },
+    {
+      "id": "smoke_first",
+      "description": "A minimal test must pass before any expensive GW/RPA calculation",
+      "failure_mode": "Wasted compute hours on misconfigured runs",
+      "check_method": "Verify smoke test workflow exists and all stages completed"
+    },
+    {
+      "id": "toolchain_consistency",
+      "description": "Build toolchain must match runtime environment",
+      "failure_mode": "Linking errors, wrong BLAS/LAPACK, incorrect MPI behavior",
+      "check_method": "Compare module list and ldd output against build configuration"
+    }
+  ],
+  "routing": {
+    "intent_patterns": [
+      {"pattern": "Run/Calculate/Compute/Perform", "operation": "gw_workflow", "subdomain": "computation"},
+      {"pattern": "Debug/Fix/Why did/Crash", "operation": "debug_workflow", "subdomain": "computation"},
+      {"pattern": "Add/Implement/Develop", "operation": "feature_development", "subdomain": "development"},
+      {"pattern": "Build/Compile/Install", "operation": "build_workflow", "subdomain": "development"},
+      {"pattern": "Benchmark/Validate/Test", "operation": "benchmark_workflow", "subdomain": "development"},
+      {"pattern": "RPA/correlation energy", "operation": "rpa_workflow", "subdomain": "computation"}
+    ],
+    "input_patterns": [
+      {"file_pattern": "STRU + INPUT", "subdomain": "computation"},
+      {"file_pattern": "librpa.in + INPUT", "subdomain": "computation"},
+      {"file_pattern": "*.cpp + CMakeLists.txt", "subdomain": "development"},
+      {"file_pattern": "*.diff + *.patch", "subdomain": "development"},
+      {"file_pattern": "error log + INPUT", "subdomain": "computation"}
+    ]
+  },
+  "skill_hooks": {
+    "on_scope": {
+      "suggested_system_types": ["molecule", "solid", "2D"],
+      "reference_sources": ["VASP GW benchmarks", "Experimental band gaps", "LibRPA test suite"]
+    },
+    "on_derivation_required": {
+      "typical_equations": [
+        "GW self-energy Σ = iGW",
+        "Polarizability χ₀ with band summation",
+        "RPA correlation energy E_c = (1/2π) ∫ Tr[ln(1 - vχ₀) + vχ₀] dω",
+        "Fermi-Dirac occupation for metallic systems"
+      ],
+      "key_references": [
+        "Hybertsen & Louie, PRB 34, 5390 (1986)",
+        "Shishkin & Kresse, PRB 75, 235102 (2007)",
+        "Bruneval & Gonze, PRB 79, 115117 (2009)"
+      ]
+    },
+    "on_smoke_system": {
+      "description": "Minimal test: bulk Si 2×2×2, low ecutwfc, SCF→DF→NSCF→LibRPA",
+      "expected_stages": ["scf", "df", "nscf", "librpa"],
+      "pass_criteria": "All stages completed, no NaN, gw_band.dat exists"
+    },
+    "on_error_classify": {
+      "categories": [
+        "convergence_failure",
+        "input_mismatch",
+        "resource_exhaustion",
+        "numerical_instability",
+        "basis_incompatibility",
+        "toolchain_error"
+      ],
+      "common_patterns": [
+        {"symptom": "stod error in LibRPA", "category": "input_mismatch", "typical_cause": "nspin mismatch between ABACUS SCF and librpa.in"},
+        {"symptom": "NaN in chi0 eigenvalues", "category": "numerical_instability", "typical_cause": "Insufficient k-points for Fermi surface sampling"},
+        {"symptom": "SCF not converging", "category": "convergence_failure", "typical_cause": "Mixing parameter or STRU issue"}
+      ]
+    }
+  }
+}
