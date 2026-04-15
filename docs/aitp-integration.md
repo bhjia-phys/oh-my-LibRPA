@@ -119,6 +119,76 @@ See the full playbook at:
 
 ---
 
+## Externalized specification workflow
+
+oh-my-LibRPA supports the AITP
+[Externalized Spec Protocol](https://github.com/bhjia-phys/AITP-Research-Protocol/blob/main/research/knowledge-hub/EXTERNALIZED_SPEC_PROTOCOL.md)
+for complex operations.
+
+### How it works
+
+For operations marked `spec_required: true` (GW workflow, RPA workflow, feature
+development), an intermediate technical specification is produced **before any
+code**. This spec externalizes implementation-critical knowledge that source
+papers leave implicit:
+
+- **Index conventions**: band, basis, and k-point ordering used in the code
+- **Memory constraints**: matrix-free Coulomb construction, chunked polarizability
+- **Convergence strategy**: k-point, empty-band, and frequency grid requirements
+- **Symmetry handling**: SOC, point group, and time-reversal considerations
+- **Domain of validity**: gapped vs metallic, molecule vs solid
+
+The spec is human-reviewed at Gate G0 before implementation begins.
+
+### Cross-model handoff
+
+The spec model and the code model can be different. The domain manifest declares
+`recommended_model_combos` with expected HITL rounds for each combination.
+
+### Operation minimum paths
+
+Not every operation needs the full derive-first treatment:
+
+| Operation | `min_path` | `spec_required` | Why |
+| --- | --- | --- | --- |
+| GW workflow | `derive_first` | true | Complex physics chain with subtle parameter interactions |
+| RPA workflow | `derive_first` | true | Correlation energy requires careful convergence control |
+| Debug workflow | `zero_shot` | false | Diagnosis is reactive, does not need fresh derivation |
+| Feature development | `derive_first` | true | New physics features must follow derive-first discipline |
+| Build workflow | `zero_shot` | false | Toolchain configuration, not physics |
+| Benchmark workflow | `spec_guided` | false | Uses existing code, needs spec-level understanding |
+
+### Spec quality check
+
+The `on_spec_quality_check` hook validates that externalized specs meet minimum
+quality criteria before Gate G0 approval. For ABACUS+LibRPA, at least 4 of 5
+criteria must pass:
+
+1. All tensor index conventions are explicit
+2. Memory constraints are stated
+3. Convergence strategy is specified
+4. Domain of validity is documented
+5. Symmetry handling is specified for periodic systems
+
+---
+
+## Reproducibility commitment
+
+oh-my-LibRPA commits to absolute reproducibility, following the AITP Externalized
+Spec Protocol. This means:
+
+1. **All agent conversations are preserved** — unedited, complete transcripts
+2. **All intermediate specs are versioned** — v1, v2, ..., final
+3. **All code versions are tracked** — with pass/fail status per round
+4. **HITL rounds are counted** — per model combination, enabling effort prediction
+5. **Naming follows a convention** — `{artifact}-{model1}-{model2}#{round}-{Pass|Fail}.{ext}`
+
+Reference: the DMRG-LLM study (arXiv:2604.04089) demonstrated that this level
+of transparency enables quantitative evaluation of AI-assisted physics workflows
+and showed that spec-guided workflows achieved 100% success vs 46% for zero-shot.
+
+---
+
 ## Quick reference
 
 - **AITP repository**: <https://github.com/bhjia-phys/AITP-Research-Protocol>

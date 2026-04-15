@@ -12,42 +12,54 @@
       "family": "computation",
       "description": "SCF → DF → NSCF → LibRPA GW chain for quasiparticle band structures",
       "phases": ["P", "4", "5"],
-      "required_contracts": ["computation-workflow", "compute-resource"]
+      "required_contracts": ["computation-workflow", "compute-resource"],
+      "spec_required": true,
+      "min_path": "derive_first"
     },
     {
       "name": "rpa_workflow",
       "family": "computation",
       "description": "SCF → DF → LibRPA RPA chain for correlation energies",
       "phases": ["P", "4", "5"],
-      "required_contracts": ["computation-workflow", "compute-resource"]
+      "required_contracts": ["computation-workflow", "compute-resource"],
+      "spec_required": true,
+      "min_path": "derive_first"
     },
     {
       "name": "debug_workflow",
       "family": "computation",
       "description": "Failure diagnosis and repair for ABACUS/LibRPA computations",
       "phases": ["6"],
-      "required_contracts": ["calculation-debug", "computation-workflow"]
+      "required_contracts": ["calculation-debug", "computation-workflow"],
+      "spec_required": false,
+      "min_path": "zero_shot"
     },
     {
       "name": "feature_development",
       "family": "development",
       "description": "New feature implementation in ABACUS, LibRPA, LibRI, LibComm, or pyatb",
       "phases": ["0", "1", "2", "3", "4", "5", "6", "7"],
-      "required_contracts": ["development-task", "computation-workflow", "benchmark-report"]
+      "required_contracts": ["development-task", "computation-workflow", "benchmark-report"],
+      "spec_required": true,
+      "min_path": "derive_first"
     },
     {
       "name": "build_workflow",
       "family": "development",
       "description": "Compilation and toolchain setup for first-principles codes",
       "phases": ["2", "4"],
-      "required_contracts": ["development-task", "compute-resource"]
+      "required_contracts": ["development-task", "compute-resource"],
+      "spec_required": false,
+      "min_path": "zero_shot"
     },
     {
       "name": "benchmark_workflow",
       "family": "development",
       "description": "Numerical validation of new features against reference values",
       "phases": ["5", "7"],
-      "required_contracts": ["benchmark-report", "computation-workflow", "development-task"]
+      "required_contracts": ["benchmark-report", "computation-workflow", "development-task"],
+      "spec_required": false,
+      "min_path": "spec_guided"
     }
   ],
   "contracts": [
@@ -168,6 +180,27 @@
         {"symptom": "NaN in chi0 eigenvalues", "category": "numerical_instability", "typical_cause": "Insufficient k-points for Fermi surface sampling"},
         {"symptom": "SCF not converging", "category": "convergence_failure", "typical_cause": "Mixing parameter or STRU issue"}
       ]
+    },
+    "on_spec_quality_check": {
+      "criteria": [
+        "All tensor index conventions are explicit (band, basis, k-point ordering)",
+        "Memory constraints are stated (e.g., matrix-free Coulomb, chunked polarizability)",
+        "Convergence strategy is specified (k-point, empty-band, frequency grids)",
+        "Domain of validity is documented (gapped vs metallic, molecule vs solid)",
+        "Symmetry handling is specified for periodic systems (SOC, point group)"
+      ],
+      "min_pass_criteria": 4
+    }
+  },
+  "reproducibility": {
+    "recommended_model_combos": [
+      {"spec_model": "claude", "code_model": "claude", "typical_hitl_rounds": 5, "notes": "Same-model: more rounds but stable"},
+      {"spec_model": "claude", "code_model": "gemini", "typical_hitl_rounds": 1, "notes": "Cross-model: spec quality dominates, fewer code rounds"},
+      {"spec_model": "gpt", "code_model": "claude", "typical_hitl_rounds": 3, "notes": "Good spec generation from GPT, clean implementation from Claude"}
+    ],
+    "conversation_archive": {
+      "directory": "archive/",
+      "naming_convention": "{artifact}-{model1}-{model2}#{round}-{Pass|Fail}.{ext}"
     }
   }
 }
