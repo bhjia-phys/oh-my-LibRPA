@@ -261,6 +261,20 @@ oh-my-librpa/
 
 ---
 
+## AITP integration
+
+oh-my-LibRPA is the **domain skill** for the [AITP Research Protocol](https://github.com/AroundPeking/AITP-Research-Protocol) — a protocol-first research runtime that turns AI agents into disciplined physics collaborators.
+
+- **AITP manages the research lifecycle** (projects, layers, gates, human interaction).
+- **oh-my-LibRPA provides the domain knowledge** (contracts, operations, invariants, routing).
+- They communicate through structured contract files on disk.
+
+For the full integration guide, see [`docs/aitp-integration.md`](docs/aitp-integration.md).
+
+The domain manifest is at [`registry/domain-manifest.abacus-librpa.json`](registry/domain-manifest.abacus-librpa.json).
+
+---
+
 ## One-line pitch
 
 > **oh-my-LibRPA turns ABACUS + LibRPA workflow knowledge into a chat-native, route-aware, safety-conscious agent layer.**
