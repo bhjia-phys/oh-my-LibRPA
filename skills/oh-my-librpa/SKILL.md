@@ -16,12 +16,14 @@ Do these steps in order:
 1. Ask for files first when the user already has a case bundle.
 2. Decide the upstream stack before deeper routing:
    - strong `ABACUS -> LibRPA` markers: `INPUT*`, `KPT*`, `STRU`, `.orb`, `.abfs`, `.upf`, `OUT.ABACUS/`, ABACUS logs
-   - strong `FHI-aims -> LibRPA` markers: `control.in`, `run_librpa_gw_aims_iophr.sh`, explicit `FHI-aims` user intent, or task names such as `qsgw_band`, `qsgw_band0`, `qsgw`, `qsgwa`
+   - strong `FHI-aims -> LibRPA` markers: `control.in`, `run_aims.sh`, `run_librpa.sh`, `run_librpa_gw_aims_iophr.sh`, explicit `FHI-aims` user intent, or task names such as `qsgw_band`, `qsgw_band0`, `qsgw`, `qsgwa`
+   - task-shaped note: `g0w0_band` alone is not enough to claim `FHI-aims -> LibRPA` ownership because the ABACUS lane uses it too
    - supporting markers only: `geometry.in`, `librpa.d/`, `self_energy/`; they are not enough on their own to claim `FHI-aims -> LibRPA`
 3. If the user asks to install, configure, compile, rebuild, or debug the FHI-aims executable or source tree itself, route through `skills/fhi-aims-build/`.
 4. If strong ABACUS markers are present, route through `skills/oh-my-librpa-abacus-librpa/`.
-5. If strong FHI-aims markers are present and there are no conflicting ABACUS markers, route through `skills/oh-my-librpa-fhi-aims-qsgw/`.
-6. If a bundle mixes both families, stop and ask which upstream stack owns the source of truth before editing anything.
+5. If strong FHI-aims markers are present and the user explicitly asks for periodic-solid `g0w0_band`, route through `skills/oh-my-librpa-fhi-aims-g0w0-band/`.
+6. If strong FHI-aims markers are present and there are no conflicting ABACUS markers, route through `skills/oh-my-librpa-fhi-aims-qsgw/`.
+7. If a bundle mixes both families, stop and ask which upstream stack owns the source of truth before editing anything.
 6. For `ABACUS -> LibRPA`, classify the task as `GW`, `RPA`, or `Debug`.
 7. For `ABACUS -> LibRPA`, classify the system as `molecule`, `solid`, or `2D`.
 8. Ask where execution should happen: local or server.
@@ -50,7 +52,7 @@ Classify provided files into these groups:
 
 - `structure files`: `STRU`, `cif`, `xyz`, `geometry.in`
 - `input bundle`: `INPUT`, `INPUT_scf`, `INPUT_nscf`, `KPT`, `KPT_scf`, `KPT_nscf`, `librpa.in`
-- `fhi-aims strong markers`: `control.in`, `run_librpa_gw_aims_iophr.sh`, explicit `qsgw_band` / `qsgw_band0` / `qsgw` / `qsgwa` task settings
+- `fhi-aims strong markers`: `control.in`, `run_aims.sh`, `run_librpa.sh`, `run_librpa_gw_aims_iophr.sh`, explicit `qsgw_band` / `qsgw_band0` / `qsgw` / `qsgwa` task settings
 - `fhi-aims supporting markers`: `geometry.in`, `self_energy/`, `librpa.d/`
 - `symmetry sidecars`: `irreducible_sector.txt`, `symrot_R.txt`, `symrot_k.txt`, `symrot_abf_k.txt`
 - `workflow scripts`: `get_diel.py`, `perform.sh`, `preprocess_abacus_for_librpa_band.py`, `run_abacus.sh`, `output_librpa.py`, `plot_gw_band_paper.py`, `env.sh`, `probe_batch.sh`
@@ -63,6 +65,7 @@ Use these intake rules:
 - `structure files` -> generate or complete the workflow
 - `input bundle` -> audit and patch; do not rewrite blindly
 - `input bundle` that is clearly ABACUS-based -> hand off to `skills/oh-my-librpa-abacus-librpa/`
+- `fhi-aims strong markers` with explicit periodic-solid `g0w0_band` intent and no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-g0w0-band/`
 - `fhi-aims strong markers` with no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`
 - `fhi-aims supporting markers` alone do not override ABACUS routing; ask only if ownership is still unclear after checking for strong markers
 - `symmetry sidecars` -> keep them tied to the exact SCF that produced them; if one exists for periodic GW, verify the full required set before LibRPA
@@ -116,6 +119,7 @@ Always do all of the following:
 
 - User provides ABACUS-style inputs such as `INPUT_scf`, `INPUT_nscf`, `KPT_*`, `STRU`, or ABACUS logs -> route to `skills/oh-my-librpa-abacus-librpa/`
 - User asks to install, configure, compile, rebuild, or debug a FHI-aims build itself -> route to `skills/fhi-aims-build/`
+- User explicitly asks for `FHI-aims + LibRPA` periodic `g0w0_band` -> route to `skills/oh-my-librpa-fhi-aims-g0w0-band/`
 - User explicitly says `FHI-aims`, or provides `control.in`, `run_librpa_gw_aims_iophr.sh`, or explicit tasks such as `qsgw_band` / `qsgw_band0` / `qsgw` / `qsgwa` with no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`
 - If a bundle mixes both ABACUS and FHI-aims markers, stop and ask which upstream stack owns the source of truth before editing anything.
 - If neither stack is explicit, preserve existing behavior and route by task intent:
