@@ -18,9 +18,10 @@ Do these steps in order:
    - strong `ABACUS -> LibRPA` markers: `INPUT*`, `KPT*`, `STRU`, `.orb`, `.abfs`, `.upf`, `OUT.ABACUS/`, ABACUS logs
    - strong `FHI-aims -> LibRPA` markers: `control.in`, `run_librpa_gw_aims_iophr.sh`, explicit `FHI-aims` user intent, or task names such as `qsgw_band`, `qsgw_band0`, `qsgw`, `qsgwa`
    - supporting markers only: `geometry.in`, `librpa.d/`, `self_energy/`; they are not enough on their own to claim `FHI-aims -> LibRPA`
-3. If strong ABACUS markers are present, route through `skills/oh-my-librpa-abacus-librpa/`.
-4. If strong FHI-aims markers are present and there are no conflicting ABACUS markers, route through `skills/oh-my-librpa-fhi-aims-qsgw/`.
-5. If a bundle mixes both families, stop and ask which upstream stack owns the source of truth before editing anything.
+3. If the user asks to install, configure, compile, rebuild, or debug the FHI-aims executable or source tree itself, route through `skills/fhi-aims-build/`.
+4. If strong ABACUS markers are present, route through `skills/oh-my-librpa-abacus-librpa/`.
+5. If strong FHI-aims markers are present and there are no conflicting ABACUS markers, route through `skills/oh-my-librpa-fhi-aims-qsgw/`.
+6. If a bundle mixes both families, stop and ask which upstream stack owns the source of truth before editing anything.
 6. For `ABACUS -> LibRPA`, classify the task as `GW`, `RPA`, or `Debug`.
 7. For `ABACUS -> LibRPA`, classify the system as `molecule`, `solid`, or `2D`.
 8. Ask where execution should happen: local or server.
@@ -114,6 +115,7 @@ Always do all of the following:
 ## Routing rules
 
 - User provides ABACUS-style inputs such as `INPUT_scf`, `INPUT_nscf`, `KPT_*`, `STRU`, or ABACUS logs -> route to `skills/oh-my-librpa-abacus-librpa/`
+- User asks to install, configure, compile, rebuild, or debug a FHI-aims build itself -> route to `skills/fhi-aims-build/`
 - User explicitly says `FHI-aims`, or provides `control.in`, `run_librpa_gw_aims_iophr.sh`, or explicit tasks such as `qsgw_band` / `qsgw_band0` / `qsgw` / `qsgwa` with no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`
 - If a bundle mixes both ABACUS and FHI-aims markers, stop and ask which upstream stack owns the source of truth before editing anything.
 - If neither stack is explicit, preserve existing behavior and route by task intent:

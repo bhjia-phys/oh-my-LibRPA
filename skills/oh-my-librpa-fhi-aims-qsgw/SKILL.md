@@ -9,6 +9,8 @@ Treat existing case directories as the source of truth when the user says `follo
 
 Treat this skill as the FHI-aims-side router below the top-level `oh-my-librpa` entrypoint.
 
+If the request is about building or repairing the FHI-aims executable itself rather than preparing or running a case, stop and hand the task to `skills/fhi-aims-build/`.
+
 ## Core Behavior
 
 - Determine the requested task early:
