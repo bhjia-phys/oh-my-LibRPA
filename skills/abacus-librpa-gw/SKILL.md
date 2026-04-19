@@ -124,10 +124,18 @@ Use the following alignment for spin-sensitive GW workflows:
 - Materialize `env.sh` from a host profile before batch submission so `python3_exec`, `abacus_work`, `librpa_work`, and the MPI launcher are explicit
 - If launcher or python behavior is uncertain on compute nodes, materialize and run a batch-node probe before the real job
 - Prefer the updated `get_diel.py` and `preprocess_abacus_for_librpa_band.py` copies that match the merged ABACUS branch; do not fall back to stale helpers that assume only legacy `EFERMI` parsing or one fixed wavefunction filename pattern
+- Do not mix up `get_diel.py` and `output_librpa.py`: keep parser/fallback fixes in `get_diel.py`, but do not turn its `__main__` into an IBZ-only exporter for the current `head/wing` route
 - After SCF, run `pyatb` to generate the `pyatb_librpa_df` directory
 - Then run NSCF
 - Then run `preprocess_abacus_for_librpa_band.py`
 - Then run `LibRPA`
+
+### Periodic symmetry + head/wing safeguard
+
+- When `replace_w_head = t`, do not generate `pyatb_librpa_df` from IBZ k-points or star weights, even if `symrot_k.txt` exists
+- For this lane, `pyatb_librpa_df` must stay on the full regular k-grid
+- Keep root `band_out`, `k_path_info`, `velocity_matrix`, and `KS_eigenvector_*.dat` consistent with the symmetry-sidecar view used by LibRPA
+- Never overwrite those root files with the full-BZ `pyatb_librpa_df/*` copies unless the user explicitly asks for a root-level replacement and understands the symmetry mismatch risk
 
 ## Default Shrink Strategy
 

@@ -63,6 +63,18 @@ The updated script accepts both Fermi-energy spellings from `OUT.ABACUS/running_
 - `E_FERMI`
 - legacy `EFERMI`
 
+Keep this split explicit:
+
+- parser and wavefunction-fallback fixes belong in `get_diel.py`
+- `output_librpa.py` is only the writer for `pyatb_librpa_df`
+- do not blur those roles when updating helper scripts
+
+For the current periodic `head/wing` workflow:
+
+- do not make `get_diel.py` feed IBZ k-points or star weights from `symrot_k.txt` into `output_librpa.py`
+- keep `pyatb_librpa_df` on the full regular k-grid
+- keep root `band_out`, `k_path_info`, `velocity_matrix`, and `KS_eigenvector_*.dat` separate from `pyatb_librpa_df/*`; do not replace the root files with the full-BZ copies
+
 ### `preprocess_abacus_for_librpa_band.py`
 
 The updated script resolves multiple wavefunction filename patterns instead of assuming one fixed ABACUS export name.

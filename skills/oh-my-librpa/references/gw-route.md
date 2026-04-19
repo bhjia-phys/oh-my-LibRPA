@@ -141,6 +141,12 @@ Required checks and stages:
 - then run `LibRPA`
 - prefer `run_gw_workflow.sh` when available so stage execution and verification stay in one flow
 
+Helper-file rule:
+
+- do not mix the roles of `get_diel.py` and `output_librpa.py`
+- keep the newer parser/fallback improvements in `get_diel.py`, but do not rewrite its `__main__` into an IBZ-only exporter just because `symrot_k.txt` exists
+- treat `perform.sh`, `get_diel.py`, `output_librpa.py`, and `preprocess_abacus_for_librpa_band.py` as a matched helper quartet; patch them intentionally, not piecemeal
+
 ## Periodic symmetry lane
 
 Use this lane only for periodic GW when the user explicitly asks to enable symmetry or when the case already contains ABACUS symmetry sidecars.
@@ -159,6 +165,9 @@ Required stage handling:
 
 - generate the symmetry sidecars from the same SCF that produces the Coulomb and density-matrix inputs
 - after the symmetry-enabled SCF, verify the sidecars exist under `OUT.ABACUS/`
+- for the current `head/wing` lane, always generate `pyatb_librpa_df` on the full regular k-grid; do not feed IBZ k-points or star weights from `symrot_k.txt` into `output_librpa.py`
+- keep the root-level `band_out`, `k_path_info`, `velocity_matrix`, and `KS_eigenvector_*.dat` aligned with the symmetry-sidecar view seen by LibRPA; do not overwrite those root files with the full-BZ `pyatb_librpa_df/*` copies
+- if a temporary full-BZ regeneration is needed for `pyatb_librpa_df`, do it in isolation and copy back only the `pyatb_librpa_df/` directory unless the user explicitly requests a root-level replacement
 - copy the sidecars into the LibRPA working directory before `preprocess_abacus_for_librpa_band.py` and `LibRPA`
 - fail fast if any required sidecar is missing
 
