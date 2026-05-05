@@ -130,6 +130,7 @@ For Windows + Git Bash agent updates, see:
 - static preflight before remote execution
 - Markdown run reports written both in-run and to archive
 - stage-by-stage reporting for SCF / pyatb / NSCF / preprocess / LibRPA
+- **absolute reproducibility**: all conversations, intermediate specs, and code versions are archived with structured naming — enabling quantitative evaluation of AI-assisted physics workflows (inspired by [DMRG-LLM, arXiv:2604.04089](https://arxiv.org/abs/2604.04089))
 
 ### Reusable assets
 
@@ -146,9 +147,11 @@ For Windows + Git Bash agent updates, see:
 ```text
 Molecule GW:      SCF -> LibRPA
 Periodic GW:      SCF -> pyatb -> NSCF -> preprocess -> LibRPA
-Periodic GW sym:  SCF(symmetry=1,rpa=1) -> copy sidecars -> pyatb -> NSCF(symmetry=-1) -> preprocess -> LibRPA(symmetry flags)
+Periodic GW sym:  SCF(symmetry=1,rpa=1,no SOC) -> copy sidecars -> pyatb -> NSCF(symmetry=-1) -> preprocess -> LibRPA(symmetry flags)
 RPA:              SCF -> LibRPA
 ```
+
+For SOC cases, do not use the periodic symmetry lane. Keep the ABACUS side on `symmetry = -1` and do not enable the LibRPA symmetry flags.
 
 The agent should decide the lane from the user's files, intent, and system type — then explain what it is doing and why.
 
@@ -247,6 +250,7 @@ oh-my-librpa/
 - **Extension-friendly** — keep the ABACUS mainline intact while adding supplemental routes for other DFT stacks such as FHI-aims
 - **Safety-first** — fresh run directories, static checks first, no silent overwrite of source data
 - **Report what happened** — every important stage should say what was done, what was observed, and what is next
+- **Reproducible by default** — every conversation, spec, and code version is preserved for post-hoc analysis and quantitative evaluation
 
 ---
 
@@ -256,6 +260,22 @@ oh-my-librpa/
 - every run chain must use a new isolated directory
 - never overwrite original data directories
 - for expensive or long jobs, confirm compute location and resource choice first
+
+---
+
+## AITP integration
+
+oh-my-LibRPA is the **domain skill** for the [AITP Research Protocol](https://github.com/bhjia-phys/AITP-Research-Protocol) — a protocol-first research runtime that turns AI agents into disciplined physics collaborators.
+
+- **AITP manages the research lifecycle** (projects, layers, gates, human interaction).
+- **oh-my-LibRPA provides the domain knowledge** (contracts, operations, invariants, routing).
+- They communicate through structured contract files on disk.
+
+Both projects share a commitment to externalized specifications and absolute reproducibility, formalized in the AITP [Externalized Spec Protocol](https://github.com/bhjia-phys/AITP-Research-Protocol/blob/main/research/knowledge-hub/EXTERNALIZED_SPEC_PROTOCOL.md).
+
+For the full integration guide, see [`docs/aitp-integration.md`](docs/aitp-integration.md).
+
+The domain manifest is at [`registry/domain-manifest.abacus-librpa.json`](registry/domain-manifest.abacus-librpa.json).
 
 ---
 

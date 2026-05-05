@@ -27,6 +27,7 @@ Choose assets in this order:
 7. PP / NAO / ABFS must be matched as a corresponding set. Do not mix them arbitrarily across unrelated PP families, because the basis and auxiliary basis are generated for the chosen pseudopotential.
 8. SOC pseudopotentials are not yet bundled in this library. If a SOC case needs PP assets that are not present yet, ask the user to upload the corresponding files.
 9. If SOC is enabled, SOC pseudopotentials are mandatory. Do not run a SOC case with non-SOC pseudopotentials.
+10. If the user explicitly requests a specific PP family, orbital cutoff, or orbital tier and the bundled library does not already contain that exact matched set, switch to `references/abfs-generation.md` instead of substituting an approximate library match.
 
 ## What to pull from the library
 
@@ -43,6 +44,23 @@ Interpret the library as an element-indexed asset store with optional system-lev
 When shrink is enabled and the library contains the needed `.abfs`, use those filenames directly for `ABFS_ORBITAL` entries.
 
 If a required element is not covered by the library, ask the user for the missing files instead of inventing a fallback.
+
+## `df_iopcas_ghj` fallback for matched regeneration
+
+When the user wants a regenerated matched set on `df_iopcas_ghj`, prefer the official `ABACUS-orbitals` checkout:
+
+- checkout root: `/data/home/df_iopcas_ghj/basis_pp/ABACUS-orbitals-main`
+- helper: `scripts/ensure_abacus_orbitals_checkout.sh /data/home/df_iopcas_ghj/basis_pp/ABACUS-orbitals-main`
+
+For the current `alpha-MnTe` route, the requested matched set is:
+
+- PP family: `Dojo-NC-SR`
+- orbital cutoff: `10au`
+- orbital tier: `TZDP`
+- `Mn`: `Mn_gga_10au_100Ry_6s3p3d2f.orb`
+- `Te`: `Te_gga_10au_100Ry_3s3p3d2f.orb`
+
+Do not substitute the older `8au/7au` `DZP` orbitals for this route.
 
 ## Reporting requirement
 

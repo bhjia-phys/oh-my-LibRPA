@@ -54,7 +54,8 @@ For GW requests, set:
 - `vq_threshold = 0`
 - `sqrt_coulomb_threshold = 0`
 - `use_fullcoul_exx = t`
-- `output_gw_sigc_mat_rf = t`
+- `output_gw_sigc_mat_rf = f`
+- Only set `output_gw_sigc_mat_rf = t` when the user explicitly asks to open NSCF band continuation
 - `libri_chi0_threshold_C = 1e-4`
 - `libri_chi0_threshold_G = 1e-5`
 - `libri_exx_threshold_V = 1e-1`
@@ -108,6 +109,7 @@ Use the following alignment for spin-sensitive GW workflows:
 - Use official ABACUS input names from the ABACUS input reference
 - Do not run `pyatb`
 - Set `replace_w_head = f`
+- Keep `output_gw_sigc_mat_rf = f`
 - For the tested smoke path `molecule + GW + no NSCF + no pyatb + no shrink`, materialize the dedicated route with `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
 - Keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, and `exx_cs_inv_thr 1e-5`
 - Do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` for that short route
@@ -117,14 +119,23 @@ Use the following alignment for spin-sensitive GW workflows:
 ### Solid
 
 - Ask the user how many k-points to use in `KPT`; default to `8 8 8`
+- Only enable `output_gw_sigc_mat_rf = t` when the user explicitly asks to open NSCF band continuation; for a materialized case, pass `--enable-nscf-band-continuation true`
 - `KPT_nscf` must be provided by the user
 - Materialize `env.sh` from a host profile before batch submission so `python3_exec`, `abacus_work`, `librpa_work`, and the MPI launcher are explicit
 - If launcher or python behavior is uncertain on compute nodes, materialize and run a batch-node probe before the real job
 - Prefer the updated `get_diel.py` and `preprocess_abacus_for_librpa_band.py` copies that match the merged ABACUS branch; do not fall back to stale helpers that assume only legacy `EFERMI` parsing or one fixed wavefunction filename pattern
+- Do not mix up `get_diel.py` and `output_librpa.py`: keep parser/fallback fixes in `get_diel.py`, but do not turn its `__main__` into an IBZ-only exporter for the current `head/wing` route
 - After SCF, run `pyatb` to generate the `pyatb_librpa_df` directory
 - Then run NSCF
 - Then run `preprocess_abacus_for_librpa_band.py`
 - Then run `LibRPA`
+
+### Periodic symmetry + head/wing safeguard
+
+- When `replace_w_head = t`, do not generate `pyatb_librpa_df` from IBZ k-points or star weights, even if `symrot_k.txt` exists
+- For this lane, `pyatb_librpa_df` must stay on the full regular k-grid
+- Keep root `band_out`, `k_path_info`, `velocity_matrix`, and `KS_eigenvector_*.dat` consistent with the symmetry-sidecar view used by LibRPA
+- Never overwrite those root files with the full-BZ `pyatb_librpa_df/*` copies unless the user explicitly asks for a root-level replacement and understands the symmetry mismatch risk
 
 ## Default Shrink Strategy
 
@@ -147,6 +158,7 @@ Interpretation:
 - `shrink_lu_inv_thr` is used to control inversion-error handling for the output `sinvS`; default to `1e-3`.
 - `exx_pca_threshold = 10` means the large-basis path expects external input when shrink is enabled.
 - When shrink is enabled, `ABFS_ORBITAL` in `STRU` must be specified by the user.
+- If the user asks how to obtain or generate those files, load `skills/abacus-librpa-abfs-orbital/`.
 - If the user provides `.abfs` files, use those filenames directly in `ABFS_ORBITAL` entries.
 - Server examples include names such as `Ga_str_4s4p3d2f2g_1e-4.abfs` and `As_str_4s4p3d2f2g_1e-4.abfs`.
 

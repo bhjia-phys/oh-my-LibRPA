@@ -12,9 +12,18 @@ Choose the workflow by system type:
 
 If the case is missing PP/NAO/ABFS files, pull them from the bundled asset library via `references/pp-nao-abfs-library.md` before generating new inputs.
 
+If the user explicitly requests regenerated ABFS, or if the requested PP family / orbital radius / orbital tier is not present in the bundled library, switch to `references/abfs-generation.md` instead of silently reusing an approximate `.abfs` bundle.
+
 If the case uses a locally merged ABACUS checkout or locally patched helper scripts, also apply `references/abacus-merge-compat.md`.
 
 Before submitting any reused GW case bundle, run `scripts/intake_preflight.sh` and fix every compatibility failure first. Do not submit first and debug deprecated input keys later.
+
+For reused periodic GW cases on the current `df` ABACUS route, reject these stale keys during the compatibility audit instead of letting NSCF fail remotely:
+
+- `exx_use_ewald`
+- `cs_inv_thr`
+- `exx_spencer_type`
+- `out_bandgap`
 
 ## Task defaults
 
@@ -31,7 +40,7 @@ Set or verify these `librpa.in` defaults unless a stronger empirical rule overri
 - `vq_threshold = 0`
 - `sqrt_coulomb_threshold = 0`
 - `use_fullcoul_exx = t`
-- `output_gw_sigc_mat_rf = t`
+- `output_gw_sigc_mat_rf = f`
 - `libri_chi0_threshold_C = 1e-4`
 - `libri_chi0_threshold_G = 1e-5`
 - `libri_exx_threshold_V = 1e-1`
@@ -41,9 +50,21 @@ Set or verify these `librpa.in` defaults unless a stronger empirical rule overri
 - `libri_g0w0_threshold_G = 1e-5`
 - `libri_g0w0_threshold_Wc = 1e-6`
 
+Only flip `output_gw_sigc_mat_rf` to `t` when the user explicitly asks to open NSCF band continuation.
+When materializing a fresh GW case for that request, pass `--enable-nscf-band-continuation true`.
+
 - for template-generated inputs that use explicit lattice vectors, set `latname = user_defined_lattice`
 
+Time-frequency grid guardrails:
+
+- if `tfgrid_type = minimax` or the key is omitted and LibRPA will use the default `minimax`, require `nfreq >= 6`
+- reason: the LibRPA minimax path uses GreenX-backed minimax grids and the supported grid count starts at `6`; do not treat `nfreq < 6` as a valid minimax setup
+- if a quick functional smoke test really needs `nfreq < 6`, explicitly switch away from minimax, for example to `tfgrid_type = evenspaced_tf` or `tfgrid_type = evenspaced`
+- never present `nfreq < 6` as a production or convergence-quality GW/RPA setting; it is only acceptable for narrow path-validation smoke tests with a non-minimax grid
+
 Before selecting PP / NAO / ABFS assets for a GW case, enforce the matching rule from `references/pp-nao-abfs-library.md`: pseudopotential, atomic basis, and auxiliary basis must correspond to the same intended setup and must not be mixed casually across unrelated PP families.
+
+For shrink GW cases that use `ABFS_ORBITAL`, require the `.abfs` header to match the paired `.orb` radius cutoff. If the active `.orb` contains `f`, require the `.abfs` header to keep nonzero `f` and `g`.
 
 For SOC cases, do not assume the current library is sufficient: SOC pseudopotentials are not yet bundled by default, so if the required SOC PP assets are missing, stop and ask the user to upload them.
 
@@ -94,6 +115,7 @@ Required settings and checks:
 - use official ABACUS input names
 - do not run `pyatb`
 - set `replace_w_head = f`
+- keep `output_gw_sigc_mat_rf = f`
 - for the tested short smoke path, materialize the route with:
   - `scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
 - keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, `exx_cs_inv_thr 1e-5`
@@ -110,15 +132,26 @@ Required checks and stages:
 - ask how many k-points to use in `KPT`; default to `8 8 8`
 - require explicit `KPT_nscf`
 - prefer the updated `get_diel.py` and `preprocess_abacus_for_librpa_band.py` copies that match the merged ABACUS branch; do not fall back to stale helpers that assume only legacy `EFERMI` parsing or one fixed wavefunction filename pattern
+- treat the periodic GW helper quartet as inseparable: `perform.sh`, `get_diel.py`, `output_librpa.py`, and `preprocess_abacus_for_librpa_band.py`
+- when cloning a prior GW case into a fresh run directory, copy the full helper quartet together or re-materialize it from the template; never copy only a subset
+- only enable `output_gw_sigc_mat_rf = t` when the user explicitly asks to open NSCF band continuation; for a materialized case, pass `--enable-nscf-band-continuation true`
 - after SCF, run `pyatb` to generate `pyatb_librpa_df`
 - then run NSCF
 - then run `preprocess_abacus_for_librpa_band.py`
 - then run `LibRPA`
 - prefer `run_gw_workflow.sh` when available so stage execution and verification stay in one flow
 
+Helper-file rule:
+
+- do not mix the roles of `get_diel.py` and `output_librpa.py`
+- keep the newer parser/fallback improvements in `get_diel.py`, but do not rewrite its `__main__` into an IBZ-only exporter just because `symrot_k.txt` exists
+- treat `perform.sh`, `get_diel.py`, `output_librpa.py`, and `preprocess_abacus_for_librpa_band.py` as a matched helper quartet; patch them intentionally, not piecemeal
+
 ## Periodic symmetry lane
 
 Use this lane only for periodic GW when the user explicitly asks to enable symmetry or when the case already contains ABACUS symmetry sidecars.
+
+Do not use this lane for SOC cases. When SOC is enabled, keep the ABACUS side on `symmetry = -1` and disable `use_abacus_exx_symmetry` / `use_abacus_gw_symmetry` in `librpa.in`.
 
 Required settings:
 
@@ -132,6 +165,9 @@ Required stage handling:
 
 - generate the symmetry sidecars from the same SCF that produces the Coulomb and density-matrix inputs
 - after the symmetry-enabled SCF, verify the sidecars exist under `OUT.ABACUS/`
+- for the current `head/wing` lane, always generate `pyatb_librpa_df` on the full regular k-grid; do not feed IBZ k-points or star weights from `symrot_k.txt` into `output_librpa.py`
+- keep the root-level `band_out`, `k_path_info`, `velocity_matrix`, and `KS_eigenvector_*.dat` aligned with the symmetry-sidecar view seen by LibRPA; do not overwrite those root files with the full-BZ `pyatb_librpa_df/*` copies
+- if a temporary full-BZ regeneration is needed for `pyatb_librpa_df`, do it in isolation and copy back only the `pyatb_librpa_df/` directory unless the user explicitly requests a root-level replacement
 - copy the sidecars into the LibRPA working directory before `preprocess_abacus_for_librpa_band.py` and `LibRPA`
 - fail fast if any required sidecar is missing
 
@@ -159,6 +195,10 @@ Additional rule:
 
 - when shrink is enabled, require `ABFS_ORBITAL` in `STRU`
 - if the user provides `.abfs` files, use those names directly
+- keep ABACUS-side shrink and LibRPA-side shrink strictly synchronized as a host-independent workflow invariant
+- if the case bundle was generated from a shrink SCF or already contains shrink artifacts such as `Cs_shrinked_data_*` or `shrink_sinvS_*`, require `librpa.in: use_shrink_abfs = t`
+- if the case bundle was generated from a no-shrink SCF, require `librpa.in: use_shrink_abfs = f`
+- never "turn off shrink only in librpa.in" while reusing a shrink-generated ABACUS bundle; treat that as an invalid mixed workflow
 
 ## No-shrink + pair-correction comparison lane
 
@@ -183,6 +223,7 @@ If pair correction is enabled in this lane:
 Failure rule:
 
 - if `use_shrink_abfs = f` but `INPUT_scf` still contains shrink-only keys, treat that as a mixed lane and fix the inputs before submission
+- if `use_shrink_abfs = f` but the bundle still contains shrink outputs such as `Cs_shrinked_data_*` or `shrink_sinvS_*`, also treat that as a mixed lane and block submission
 
 ## Stage success criteria
 
@@ -233,11 +274,14 @@ Accept either periodic or molecular success markers:
 
 ## Post-processing
 
-For periodic GW post-processing, prefer `plot_gw_band_paper.py`.
+For periodic GW post-processing, prefer `plot_gw_band_paper.py` and load `rules/cards/periodic-gw-plotting.yml` before deciding any sorting policy.
 
 - inputs: `GW_band_spin_*`, `band_out`, `band_kpath_info`, `KPT_nscf`
 - outputs: near-gap PNG/PDF plus a short text summary
 - use a restricted near-gap CBM search instead of a blind global conduction-band search
+- if reordering is needed for plotting, never globally reorder the full band table; sort only within the plotted manifold at each k-point
+- for occupied-only plots, sort only the occupied manifold
+- for near-gap plots, sort occupied and low-lying conduction manifolds separately
 
 ## Reporting requirement
 

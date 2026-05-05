@@ -41,6 +41,7 @@ Treat these as ABACUS markers:
 - `STRU`
 - `.orb`, `.abfs`, `.upf`
 - `running_scf.log`, `running_nscf.log`, `band_out`, `OUT.ABACUS/`
+- `geometry.in` when it appears only as a supporting structure or plotting file alongside ABACUS inputs
 
 Do not treat these as FHI-aims ownership markers on their own:
 
@@ -53,6 +54,7 @@ If ABACUS canonical markers are absent and the case instead has stronger FHI-aim
 ## Hard Separation Rule
 
 - Do not reuse `control.in` or `geometry.in` conventions from FHI-aims when preparing ABACUS cases.
+- Do not treat `geometry.in` by itself as proof that a case belongs to FHI-aims; some ABACUS bundles carry it for interop or plotting.
 - Do not reuse `INPUT_scf`, `KPT_nscf`, or ABACUS helper-script expectations when handling FHI-aims cases.
 - Do not use vague catch-all routing phrases that define a case only by not being ABACUS-owned.
 - If a bundle mixes both families, stop and ask which upstream stack owns the source of truth before editing anything.
@@ -62,4 +64,5 @@ If ABACUS canonical markers are absent and the case instead has stronger FHI-aim
 - Create a fresh run directory before real execution.
 - Audit copied bundles instead of blindly reusing stale outputs.
 - Run static checks before submission.
+- On any server, confirm that ABACUS and LibRPA were built against the same latest LibRI with the nearest-fix bugfix. If the host has a site-specific LibRI root, record it in the host profile instead of assuming a cross-server default.
 - Keep the conversation operational and report `what was done`, `what was observed`, and `what is next`.

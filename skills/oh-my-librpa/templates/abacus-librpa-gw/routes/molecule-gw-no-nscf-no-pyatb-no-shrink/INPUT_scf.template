@@ -1,0 +1,20 @@
+# Route template: molecule + GW + no NSCF + no pyatb + no shrink
+# Tested against the H2O smoke route from 2026-03-07.
+# Keep only the outputs required by the short LibRPA handoff.
+
+calculation scf
+nbands <FILL_ME>
+latname user_defined_lattice
+
+# Route-aware note:
+# - `gamma_only 1` may be beneficial for some molecular cases,
+#   but do not hard-code it as a universal rule.
+# - Keep it aligned with the exact ABACUS build and output set.
+
+out_mat_xc 1
+rpa 1
+exx_pca_threshold 1e-6
+exx_singularity_correction massidda
+rpa_ccp_rmesh_times 6
+exx_ccp_rmesh_times 3
+exx_cs_inv_thr 1e-5

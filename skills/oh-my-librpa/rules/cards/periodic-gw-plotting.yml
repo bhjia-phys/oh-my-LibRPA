@@ -1,0 +1,24 @@
+- id: periodic-gw-plotting-902
+  scene: User wants a usable periodic GW band figure after a successful run
+  symptom: Blind global CBM searches, full-band plots, or global band reordering produce noisy gaps, unreadable figures, or fake band crossings
+  root_cause: High-energy spurious roots can contaminate a naive global conduction-band minimum search, and full-band reordering can mix occupied and unoccupied manifolds
+  fix:
+    - Use `plot_gw_band_paper.py` with `GW_band_spin_*`, `band_out`, `band_kpath_info`, and `KPT_nscf`
+    - Infer the occupied manifold from the leading contiguous nonzero-occupation block in `band_out`; do not rely on a raw `> 0.5` threshold because some workflows write weighted occupations
+    - Never do a full-band global reordering across the occupation boundary
+    - If reordering is needed for plotting, sort only within the manifold being plotted at each k-point
+    - For occupied-only plots, sort only the occupied bands at each k-point
+    - For near-gap plots, sort the occupied manifold and the low-lying conduction search window separately, and never mix the two manifolds
+    - Shift energies to the GW VBM
+    - Restrict CBM search to the first few conduction bands near the gap
+    - Plot only a compact near-gap manifold for the default paper-style output
+    - Do not hard-code the y-axis by default; choose y-limits automatically from the plotted near-gap bands and keep visible headroom above the CBM
+    - Export both PNG and PDF plus a text summary
+  verify:
+    - Confirm PNG, PDF, and summary files exist
+    - Confirm the summary reports the restricted near-gap GW gap
+    - Confirm the summary records the band reordering policy that was used
+    - Confirm the figure top is not clipping the near-gap conduction bands and that the summary records the final y-limits used
+  applies_to:
+    mode: gw
+    system_type: solid
