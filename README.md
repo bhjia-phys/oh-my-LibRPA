@@ -28,6 +28,12 @@
 
 ## What this is
 
+<div align="center">
+  <img src="docs/assets/oh-my-librpa-workflow-overview.png" alt="oh-my-LibRPA workflow overview: crystal input to GW/RPA calculation to band-structure output" width="620" />
+  <br />
+  <sub>Crystal/material inputs in, curated GW/RPA workflow, band-structure artifact out.</sub>
+</div>
+
 `oh-my-LibRPA` is an **AI experience layer** for `ABACUS + LibRPA`.
 
 The idea is simple:
