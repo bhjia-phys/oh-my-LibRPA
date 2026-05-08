@@ -1,6 +1,6 @@
 ---
 name: oh-my-librpa
-description: Chat-first orchestrator for ABACUS + LibRPA workflows. Use when users ask in natural language to prepare, run, audit, or debug GW/RPA tasks, especially when the agent must classify uploaded files, choose local vs server execution, route by system type (molecule, solid, 2D), and keep the interaction operational instead of exposing raw CLI complexity.
+description: Chat-first orchestrator for ABACUS + LibRPA workflows. Use when users ask in natural language to prepare, run, audit, debug, or regression-test GW/RPA tasks, especially when the agent must classify files, choose local vs server execution, route by system type, or verify new feature work without exposing raw CLI complexity.
 ---
 
 # oh-my-librpa
@@ -12,6 +12,8 @@ Keep the conversation short, operational, and stage-based.
 ## Act as the front router
 
 Do these steps in order:
+
+Regression exception: if the user asks to run, update, or design LibRPA regression tests, refresh test refs/input tarballs, add ABACUS+LibRPA regression coverage, or validate a new feature before completion, read `references/regression-route.md`.
 
 1. Ask for files first when the user already has a case bundle.
 2. Decide the upstream stack before deeper routing:
@@ -118,6 +120,7 @@ Always do all of the following:
 ## Routing rules
 
 - User provides ABACUS-style inputs such as `INPUT_scf`, `INPUT_nscf`, `KPT_*`, `STRU`, or ABACUS logs -> route to `skills/oh-my-librpa-abacus-librpa/`
+- User asks about LibRPA regression tests, updating test refs/input tarballs, adding ABACUS+LibRPA cases, or post-feature validation -> route to `references/regression-route.md`
 - User asks to install, configure, compile, rebuild, or debug a FHI-aims build itself -> route to `skills/fhi-aims-build/`
 - User explicitly asks for `FHI-aims + LibRPA` periodic `g0w0_band` -> route to `skills/oh-my-librpa-fhi-aims-g0w0-band/`
 - User explicitly says `FHI-aims`, or provides `control.in`, `run_librpa_gw_aims_iophr.sh`, or explicit tasks such as `qsgw_band` / `qsgw_band0` / `qsgw` / `qsgwa` with no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`

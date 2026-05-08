@@ -286,6 +286,61 @@ ABFS_ORBITAL
 ...
 ```
 
+## Host-specific direct `jle-smooth` route on `df_iopcas_ghj`
+
+This is a separate, direct-consumption route for `ABFS_ORBITAL`.
+It does not regenerate `.abfs` through `abacus_abf_gen`.
+
+- source template:
+  - `/data/home/df_iopcas_ghj/basis_pp/jle-smooth/ORBITAL_10U.dat`
+- intended use:
+  - quick ABFS sensitivity tests on `df_iopcas_ghj`
+  - especially when the stock generated `.abfs` set looks too aggressive and the user wants a smoother, slightly larger-than-baseline auxiliary basis
+
+### Procedure
+
+1. Copy `ORBITAL_10U.dat` once per target species.
+2. Rename each copy to a species-specific `.abfs` filename.
+3. Replace the header `Element` field with the target species label.
+4. Replace each `Number of *orbital-->` header count with a truncated value.
+5. Do not keep the template value `100`; that is intentionally oversized for direct use.
+6. Choose the truncated counts to be only slightly larger than the previously used `ABFS_ORBITAL` header counts for the same workflow.
+7. Use the edited files directly in the later GW `STRU` under `ABFS_ORBITAL`.
+8. When this direct route is active, keep the later GW inputs on the explicit-ABFS lane:
+   - `ABFS_ORBITAL` present in `STRU`
+   - `exx_pca_threshold = 10`
+   - `use_shrink_abfs = t`
+
+### Current `alpha-MnTe` `DZP FR` example
+
+For `/data/home/df_iopcas_ghj/gw/altermagnet` with:
+
+- `Mn_gga_10au_100Ry_4s2p2d1f.orb`
+- `Te_gga_10au_100Ry_2s2p2d1f.orb`
+
+the previous generated `.abfs` headers were:
+
+- `Mn`: `S9 P7 D7 F6 G5 H4 I3 J1 K1`
+- `Te`: `S7 P6 D7 F6 G5 H4 I3 J1 K1`
+
+The direct `jle-smooth` truncation used:
+
+- `Mn`: `S10 P8 D8 F7 G6 H5 I4 J2`
+- `Te`: `S8 P7 D8 F7 G6 H5 I4 J2`
+
+with filenames:
+
+- `Mn_jlesmooth10u_plus1_314.abfs`
+- `Te_jlesmooth10u_plus1_309.abfs`
+
+where `314` and `309` are the angular-degeneracy-weighted totals from the header counts.
+
+### Notes
+
+- `ORBITAL_10U.dat` is a generic smooth template and its original `Element` header is not the target species; rewrite it explicitly.
+- The template observed on `df_iopcas_ghj` runs through `J` and does not carry a `K` block.
+- `TODO:` record which truncation ladder gives the best occupied-state behavior once the user confirms the preferred `alpha-MnTe` result.
+
 ## Validation
 
 - Check that the generation `STRU` is a single-atom structure for the target element.
