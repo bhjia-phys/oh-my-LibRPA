@@ -33,6 +33,7 @@ Prefer explicit values for:
 - MPI launcher path and flags
 - `.bashrc` / conda activation steps when the host depends on them
 - scheduler directives that affect node shape or environment loading
+- target partition resources discovered from the current server, not copied from another host or older queue
 
 If a site depends on shell init or conda activation, keep the tracked profile generic and prefer one of these patterns:
 
@@ -58,6 +59,20 @@ A common pattern is:
 - Only add `.bashrc`, `conda`, `setvars.sh`, or MPI launcher wrappers after each one is justified by a successful probe on the compute node.
 - Before sourcing site init scripts, run `ldd` on the target executable. If runtime libraries already resolve, skip extra init.
 - For single-rank ABACUS smoke runs, prefer direct binary execution over `mpirun -np 1`.
+- Before submitting to a specific Slurm partition, query the live node shape and use those values in the script and preflight checks. Useful probes include:
+  - `sinfo -p <partition> -o "%P %D %c %m %N"`
+  - `scontrol show node <node> | grep -E "CPUTot|RealMemory|Partitions"`
+- For `1 MPI rank/node` ABACUS jobs, set `--cpus-per-task` and `OMP_NUM_THREADS` to the discovered per-node core count unless the user explicitly requests an underfilled layout.
+- Set `--mem` to the discovered per-node `RealMemory` value in MB. Do not use `--mem=0`.
+- Example, not a global default: if the target `df` partition is `9242` and the live probe shows 96 cores plus `RealMemory=380000`, then use `--cpus-per-task=96`, `OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK`, and `--mem=380000` for that partition.
+
+Run the resource preflight with the discovered facts before submission:
+
+```bash
+scripts/intake_preflight.sh <case_dir> --compute-location server --ssh-target df_iopcas_ghj \
+  --target-partition <partition> --target-nodes <nodes> \
+  --expected-ntasks-per-node 1 --node-cores <CPUTot> --node-memory-mb <RealMemory>
+```
 
 ## Submission discipline
 

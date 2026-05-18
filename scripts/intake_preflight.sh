@@ -3,6 +3,7 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 checker="$script_dir/check_consistency.sh"
+resource_checker="$script_dir/check_slurm_resources.sh"
 
 usage() {
   cat <<'EOF'
@@ -12,7 +13,12 @@ Usage:
     [--system-type <auto|molecule|solid|2D>] \
     [--compute-location <local|server>] \
     [--ssh-target <host>] \
-    [--check-connectivity]
+    [--check-connectivity] \
+    [--target-partition <name>] \
+    [--target-nodes <count>] \
+    [--expected-ntasks-per-node <count>] \
+    [--node-cores <count>] \
+    [--node-memory-mb <MB>]
 
 Behavior:
   - Classifies the file bundle in a case directory
@@ -91,6 +97,11 @@ system_type="auto"
 compute_location="local"
 ssh_target=""
 check_connectivity=0
+target_partition=""
+target_nodes=""
+expected_ntasks_per_node="1"
+node_cores=""
+node_memory_mb=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -99,6 +110,11 @@ while [[ $# -gt 0 ]]; do
     --compute-location) compute_location="$2"; shift 2 ;;
     --ssh-target) ssh_target="$2"; shift 2 ;;
     --check-connectivity) check_connectivity=1; shift ;;
+    --target-partition) target_partition="$2"; shift 2 ;;
+    --target-nodes) target_nodes="$2"; shift 2 ;;
+    --expected-ntasks-per-node) expected_ntasks_per_node="$2"; shift 2 ;;
+    --node-cores) node_cores="$2"; shift 2 ;;
+    --node-memory-mb) node_memory_mb="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     --*)
       echo "Unknown argument: $1" >&2
@@ -176,9 +192,13 @@ fi
 
 connectivity_status="ready"
 connectivity_notes='Local compute selected.'
+resource_status="skipped"
+resource_notes='Local compute selected.'
 if [[ "$compute_location" == "server" ]]; then
   connectivity_status="pending"
   connectivity_notes='Server compute selected; login check not run yet.'
+  resource_status="pending"
+  resource_notes='Server compute selected; target partition/core/memory facts not provided.'
 
   if [[ -z "$ssh_target" ]]; then
     connectivity_notes='Server compute selected; ssh target is still missing.'
@@ -192,6 +212,26 @@ if [[ "$compute_location" == "server" ]]; then
     fi
   else
     connectivity_notes="Server target $ssh_target is set; login check was intentionally skipped."
+  fi
+
+  if [[ -f "$case_dir/run_abacus.sh" ]]; then
+    resource_args=("$case_dir/run_abacus.sh")
+    [[ -n "$target_partition" ]] && resource_args+=(--target-partition "$target_partition")
+    [[ -n "$target_nodes" ]] && resource_args+=(--target-nodes "$target_nodes")
+    [[ -n "$expected_ntasks_per_node" ]] && resource_args+=(--expected-ntasks-per-node "$expected_ntasks_per_node")
+    [[ -n "$node_cores" ]] && resource_args+=(--node-cores "$node_cores")
+    [[ -n "$node_memory_mb" ]] && resource_args+=(--node-memory-mb "$node_memory_mb")
+
+    if resource_output="$("$resource_checker" "${resource_args[@]}" 2>&1)"; then
+      resource_status="ready"
+      resource_notes="$(printf '%s' "$resource_output" | tr '\n' '; ' | sed 's/; $//')"
+    else
+      resource_status="blocked"
+      resource_notes="$(printf '%s' "$resource_output" | tr '\n' '; ' | sed 's/; $//')"
+    fi
+  else
+    resource_status="blocked"
+    resource_notes='Server compute selected but run_abacus.sh is missing; cannot verify Slurm resource layout.'
   fi
 fi
 
@@ -213,11 +253,17 @@ fi
 if [[ "$compute_location" == "server" && -z "$ssh_target" ]]; then
   missing_items+=("ssh target")
 fi
+if [[ "$compute_location" == "server" ]]; then
+  [[ -n "$target_partition" ]] || missing_items+=("target partition")
+  [[ -n "$target_nodes" ]] || missing_items+=("target node count")
+  [[ -n "$node_cores" ]] || missing_items+=("target node core count from server partition")
+  [[ -n "$node_memory_mb" ]] || missing_items+=("target node memory from server partition")
+fi
 
 runnable_status="ready"
-if [[ "$files_status" == "blocked" || "$consistency_status" == "blocked" || "$connectivity_status" == "blocked" || "${#missing_items[@]}" -gt 0 ]]; then
+if [[ "$files_status" == "blocked" || "$consistency_status" == "blocked" || "$connectivity_status" == "blocked" || "$resource_status" == "blocked" || "${#missing_items[@]}" -gt 0 ]]; then
   runnable_status="blocked"
-elif [[ "$connectivity_status" == "pending" || "$resolved_mode" == "unknown" || "$resolved_system_type" == "unknown" ]]; then
+elif [[ "$connectivity_status" == "pending" || "$resource_status" == "pending" || "$resolved_mode" == "unknown" || "$resolved_system_type" == "unknown" ]]; then
   runnable_status="pending"
 fi
 
@@ -227,6 +273,8 @@ if [[ "$runnable_status" == "blocked" ]]; then
 elif [[ "$runnable_status" == "pending" ]]; then
   if [[ "$compute_location" == "server" && "$connectivity_status" != "ready" ]]; then
     next_step='Confirm VPN if needed, then run server connectivity/login checks.'
+  elif [[ "$compute_location" == "server" && "$resource_status" != "ready" ]]; then
+    next_step='Probe the target server partition with sinfo/scontrol, then rerun preflight with node core and RealMemory values.'
   elif [[ "$resolved_mode" == "unknown" || "$resolved_system_type" == "unknown" ]]; then
     next_step='Confirm workflow mode and system type, then rerun preflight.'
   fi
@@ -239,6 +287,7 @@ echo "- detected system type: $resolved_system_type"
 echo "- files badge: $files_status"
 echo "- consistency badge: $consistency_status"
 echo "- connectivity badge: $connectivity_status"
+echo "- resource badge: $resource_status"
 echo "- runnable badge: $runnable_status"
 echo "- structure files: $(join_lines "${structure_files[@]-}")"
 echo "- input bundle: $(join_lines "${input_bundle[@]-}")"
@@ -249,4 +298,5 @@ echo "- archives: $(join_lines "${archives[@]-}")"
 echo "- missing items: $(join_lines "${missing_items[@]-}")"
 echo "- consistency notes: $consistency_notes"
 echo "- connectivity notes: $connectivity_notes"
+echo "- resource notes: $resource_notes"
 echo "- next step: $next_step"

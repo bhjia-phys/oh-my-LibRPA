@@ -73,6 +73,7 @@ done
 
 for script in \
   "$installed_root/scripts/check_consistency.sh" \
+  "$installed_root/scripts/check_slurm_resources.sh" \
   "$installed_root/scripts/ensure_abacus_orbitals_checkout.sh" \
   "$installed_root/scripts/intake_preflight.sh" \
   "$installed_root/scripts/materialize_batch_probe.sh" \
@@ -246,6 +247,50 @@ if "$installed_root/scripts/intake_preflight.sh" "$case_rpa" --mode rpa --system
   pass 'intake_preflight.sh produced a summary on a minimal RPA case'
 else
   fail 'intake_preflight.sh failed on a minimal RPA case'
+fi
+
+case_resource="$tmp_dir/resource-case"
+mkdir -p "$case_resource"
+cat <<'EOF' > "$case_resource/run_abacus.sh"
+#!/bin/bash
+#SBATCH -p 9242
+#SBATCH -N 4
+#SBATCH --cpus-per-task=96
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=380000
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+EOF
+if "$installed_root/scripts/check_slurm_resources.sh" "$case_resource/run_abacus.sh" \
+  --target-partition 9242 \
+  --target-nodes 4 \
+  --expected-ntasks-per-node 1 \
+  --node-cores 96 \
+  --node-memory-mb 380000 >/dev/null 2>&1; then
+  pass 'check_slurm_resources.sh accepts a script that matches supplied live partition facts'
+else
+  fail 'check_slurm_resources.sh rejected a matching Slurm resource layout'
+fi
+
+case_resource_bad="$tmp_dir/resource-case-bad"
+mkdir -p "$case_resource_bad"
+cat <<'EOF' > "$case_resource_bad/run_abacus.sh"
+#!/bin/bash
+#SBATCH -p 9242
+#SBATCH -N 4
+#SBATCH --cpus-per-task=32
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=256000
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+EOF
+if "$installed_root/scripts/check_slurm_resources.sh" "$case_resource_bad/run_abacus.sh" \
+  --target-partition 9242 \
+  --target-nodes 4 \
+  --expected-ntasks-per-node 1 \
+  --node-cores 96 \
+  --node-memory-mb 380000 >/dev/null 2>&1; then
+  fail 'check_slurm_resources.sh accepted an underfilled Slurm resource layout'
+else
+  pass 'check_slurm_resources.sh blocks underfilled Slurm core/memory requests'
 fi
 
 case_gw="$tmp_dir/gw-molecule-short"
