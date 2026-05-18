@@ -113,12 +113,14 @@ Required settings and checks:
 - set `KPT = 1 1 1`
 - treat `gamma_only` as route-aware, not a universal hard rule
 - use official ABACUS input names
-- do not run `pyatb`
+- do not run `pyatb`, `NSCF`, or `preprocess_abacus_for_librpa_band.py`; the short route is `SCF -> LibRPA`
 - set `replace_w_head = f`
+- set `use_abacus_exx_symmetry = f` and `use_abacus_gw_symmetry = f`; do not require ABACUS symmetry sidecars on this route
 - keep `output_gw_sigc_mat_rf = f`
 - for the tested short smoke path, materialize the route with:
   - `scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
-- keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, `exx_cs_inv_thr 1e-5`
+- keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `exx_cs_inv_thr 1e-5`
+- set `exx_ccp_rmesh_times` equal to `rpa_ccp_rmesh_times` for molecular GW
 - do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` on that short route
 - copy `OUT.ABACUS/vxc_out.dat` to `./vxc_out` after SCF
 - stop before LibRPA unless at least one `coulomb_mat_*.txt` file exists

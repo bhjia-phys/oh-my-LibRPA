@@ -11,16 +11,21 @@
     - Set `exx_singularity_correction = massidda`
     - Set `exx_pca_threshold = 1e-6`
     - Set `rpa_ccp_rmesh_times = 6`
-    - Set `exx_ccp_rmesh_times = 3`
+    - Set `exx_ccp_rmesh_times` equal to `rpa_ccp_rmesh_times`
     - Set `exx_cs_inv_thr = 1e-5`
     - Set `replace_w_head = f`
+    - Set `use_abacus_exx_symmetry = f`
+    - Set `use_abacus_gw_symmetry = f`
     - Set `use_shrink_abfs = f`
+    - Do not run `pyatb`, `NSCF`, or `preprocess_abacus_for_librpa_band.py`
     - Copy `OUT.ABACUS/vxc_out.dat` into the working directory as `vxc_out` after SCF
     - Stop early unless at least one `coulomb_mat_*.txt` file exists before LibRPA starts
     - Treat `gamma_only` as route-aware, not a universal hard rule
   verify:
     - Confirm `vxc_out` exists in the working directory before LibRPA
     - Confirm at least one `coulomb_mat_*.txt` file exists before LibRPA
+    - Confirm `exx_ccp_rmesh_times` and `rpa_ccp_rmesh_times` match in `INPUT_scf`
+    - Confirm `replace_w_head = f`, `use_abacus_exx_symmetry = f`, and `use_abacus_gw_symmetry = f` are present in `librpa.in`
     - Confirm `band_out`, `vxc_out`, and a rank-0 LibRPA output file (`librpa_para_nprocs_*_myid_0.out` or `LibRPA*.out`) exist after the run
     - Confirm rank-0 output contains `libRPA finished successfully`
   applies_to:

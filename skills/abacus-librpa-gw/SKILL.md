@@ -107,11 +107,13 @@ Use the following alignment for spin-sensitive GW workflows:
 - Set `KPT` to `1 1 1`
 - Treat `gamma_only` as route-aware rather than a universal hard rule
 - Use official ABACUS input names from the ABACUS input reference
-- Do not run `pyatb`
+- Do not run `pyatb`, `NSCF`, or `preprocess_abacus_for_librpa_band.py`; the short molecular GW route is `SCF -> LibRPA`.
 - Set `replace_w_head = f`
+- Set `use_abacus_exx_symmetry = f` and `use_abacus_gw_symmetry = f` in `librpa.in`; do not require ABACUS symmetry sidecar files such as `irreducible_sector.txt`, `symrot_R.txt`, `symrot_k.txt`, or `symrot_abf_k.txt`.
 - Keep `output_gw_sigc_mat_rf = f`
 - For the tested smoke path `molecule + GW + no NSCF + no pyatb + no shrink`, materialize the dedicated route with `oh-my-librpa/scripts/materialize_gw_template.sh --case-dir <case_dir> --system-type molecule --needs-nscf false --needs-pyatb false --use-shrink-abfs false`
-- Keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, `rpa_ccp_rmesh_times 6`, `exx_ccp_rmesh_times 3`, and `exx_cs_inv_thr 1e-5`
+- Keep `out_mat_xc 1`, `exx_singularity_correction = massidda`, `exx_pca_threshold 1e-6`, and `exx_cs_inv_thr 1e-5`
+- Set `exx_ccp_rmesh_times` equal to `rpa_ccp_rmesh_times` for molecular GW; using a smaller EXX mesh can leave the Coulomb/EXX matrix coverage inconsistent for LibRPA.
 - Do not enable `out_chg`, `out_mat_r`, or `out_mat_hs2` for that short route
 - Copy `OUT.ABACUS/vxc_out.dat` into the working directory as `vxc_out` before LibRPA
 - Stop before LibRPA unless at least one `coulomb_mat_*.txt` file exists

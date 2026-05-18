@@ -560,6 +560,11 @@ else
 fi
 
 if grep -q 'out_mat_xc[[:space:]]\+1' "$case_gw/INPUT_scf" \
+  && awk '
+    $1 == "exx_ccp_rmesh_times" { exx = $2 }
+    $1 == "rpa_ccp_rmesh_times" { rpa = $2 }
+    END { exit !(exx != "" && rpa != "" && exx == rpa) }
+  ' "$case_gw/INPUT_scf" \
   && ! grep -q 'out_chg[[:space:]]\+1' "$case_gw/INPUT_scf" \
   && ! grep -q 'out_mat_r[[:space:]]\+1' "$case_gw/INPUT_scf" \
   && ! grep -q 'out_mat_hs2[[:space:]]\+1' "$case_gw/INPUT_scf"; then
@@ -569,6 +574,8 @@ else
 fi
 
 if grep -q '^replace_w_head = f$' "$case_gw/librpa.in" \
+  && grep -q '^use_abacus_exx_symmetry = f$' "$case_gw/librpa.in" \
+  && grep -q '^use_abacus_gw_symmetry = f$' "$case_gw/librpa.in" \
   && grep -q '^use_shrink_abfs = f$' "$case_gw/librpa.in"; then
   pass 'materialized librpa.in matches the molecular short-route defaults'
 else
@@ -582,7 +589,7 @@ else
   fail 'materialized run_abacus.sh is missing the direct LibRPA handoff guards'
 fi
 
-if [[ ! -f "$case_gw/INPUT_nscf" && ! -f "$case_gw/KPT_nscf" ]] && grep -q '^1 1 1 0 0 0$' "$case_gw/KPT_scf"; then
+if [[ ! -f "$case_gw/INPUT_nscf" && ! -f "$case_gw/KPT_nscf" && ! -f "$case_gw/get_diel.py" && ! -f "$case_gw/perform.sh" && ! -f "$case_gw/preprocess_abacus_for_librpa_band.py" ]] && grep -q '^1 1 1 0 0 0$' "$case_gw/KPT_scf"; then
   pass 'materialized molecular GW case drops NSCF assets and keeps Gamma-only KPT_scf'
 else
   fail 'materialized molecular GW case did not drop NSCF assets or did not keep Gamma-only KPT_scf'

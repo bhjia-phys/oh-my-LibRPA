@@ -584,6 +584,14 @@ if [[ "$resolved_mode" == "gw" && "$resolved_system_type" == "molecule" ]]; then
     note_fail "molecular GW route requires 'exx_singularity_correction massidda' in INPUT_scf so Coulomb files are generated"
   fi
 
+  exx_ccp="$(trim "$(get_value "$scf" "exx_ccp_rmesh_times" || true)")"
+  rpa_ccp="$(trim "$(get_value "$scf" "rpa_ccp_rmesh_times" || true)")"
+  if [[ -n "$exx_ccp" && -n "$rpa_ccp" && "$exx_ccp" == "$rpa_ccp" ]]; then
+    note_pass "molecular GW route keeps exx_ccp_rmesh_times equal to rpa_ccp_rmesh_times"
+  else
+    note_fail "molecular GW route requires exx_ccp_rmesh_times and rpa_ccp_rmesh_times to match"
+  fi
+
   if grep -qiE '^[[:space:]]*gamma_only[[:space:]]+1([[:space:]]|$)' "$scf"; then
     note_pass "gamma_only 1 is enabled for the molecular GW route"
   else
@@ -606,6 +614,12 @@ if [[ "$resolved_mode" == "gw" && "$resolved_system_type" == "molecule" ]]; then
     note_pass "molecular GW route sets replace_w_head = f"
   else
     note_fail "molecular GW route requires 'replace_w_head = f' in librpa.in"
+  fi
+
+  if has_key_value "$librpa" "use_abacus_exx_symmetry" "f" && has_key_value "$librpa" "use_abacus_gw_symmetry" "f"; then
+    note_pass "molecular GW route disables ABACUS symmetry flags in librpa.in"
+  else
+    note_fail "molecular GW route requires use_abacus_exx_symmetry = f and use_abacus_gw_symmetry = f in librpa.in"
   fi
 
   if has_key_value "$librpa" "use_shrink_abfs" "f"; then
