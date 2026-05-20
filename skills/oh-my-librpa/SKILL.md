@@ -26,26 +26,27 @@ Regression exception: if the user asks to run, update, or design LibRPA regressi
 5. If strong FHI-aims markers are present and the user explicitly asks for periodic-solid `g0w0_band`, route through `skills/oh-my-librpa-fhi-aims-g0w0-band/`.
 6. If strong FHI-aims markers are present and there are no conflicting ABACUS markers, route through `skills/oh-my-librpa-fhi-aims-qsgw/`.
 7. If a bundle mixes both families, stop and ask which upstream stack owns the source of truth before editing anything.
-6. For `ABACUS -> LibRPA`, classify the task as `GW`, `RPA`, or `Debug`.
-7. For `ABACUS -> LibRPA`, classify the system as `molecule`, `solid`, or `2D`.
-8. Ask where execution should happen: local or server.
-9. Create a fresh isolated run directory before any real run.
-10. If the case needs PP/NAO/ABFS assets and the user did not provide a complete bundle, read `references/pp-nao-abfs-library.md` and select files from the bundled asset library.
-11. If the user explicitly asks to regenerate ABFS, or if the bundled library does not contain the requested PP family / radius / orbital tier, also read `references/abfs-generation.md` and generate a matched auxiliary basis instead of substituting an approximate one.
-12. For periodic-solid `ABACUS -> PyATB -> LibRPA` `g0w0_band`,
+8. For `ABACUS -> LibRPA`, classify the task as `GW`, `RPA`, or `Debug`.
+9. For `ABACUS -> LibRPA`, classify the system as `molecule`, `solid`, or `2D`.
+10. Ask where execution should happen: local or server.
+11. Create a fresh isolated run directory before any real run.
+12. If the case needs PP/NAO/ABFS assets and the user did not provide a complete bundle, read `references/pp-nao-abfs-library.md` and select files from the bundled asset library.
+13. If the user explicitly asks to regenerate ABFS, or if the bundled library does not contain the requested PP family / radius / orbital tier, also read `references/abfs-generation.md` and generate a matched auxiliary basis instead of substituting an approximate one.
+14. If the user provides or mentions `paper_dataset_GW_pseudopotential+NAO.zip`, asks to reproduce the paper benchmark materials, or asks for all materials in that dataset to follow one ABACUS workflow, read `references/paper-dataset-material-workflow.md`.
+15. For periodic-solid `ABACUS -> PyATB -> LibRPA` `g0w0_band`,
     `qsgw_band0`, symmetry, shrink, or head-wing work, first read
     `references/abacus-g0w0-qsgw-workflow.md`.
-13. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
+16. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
    - `references/gw-route.md`
    - `references/rpa-route.md`
    - `references/debug-route.md`
-14. If the ABACUS case uses the user's merged local ABACUS checkout or helper scripts copied from local Downloads, also read `references/abacus-merge-compat.md`.
-15. If server execution is chosen, also read `references/server-profiles.md` before submission.
-16. For `ABACUS -> LibRPA`, before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
-17. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
-18. When the user asks to plot periodic GW/EXX bands or compare occupied manifolds, load `rules/cards/periodic-gw-plotting.yml` before choosing any sorting or plotting logic.
-19. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
-20. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
+17. If the ABACUS case uses the user's merged local ABACUS checkout or helper scripts copied from local Downloads, also read `references/abacus-merge-compat.md`.
+18. If server execution is chosen, also read `references/server-profiles.md` before submission.
+19. For `ABACUS -> LibRPA`, before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
+20. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
+21. When the user asks to plot periodic GW/EXX bands or compare occupied manifolds, load `rules/cards/periodic-gw-plotting.yml` before choosing any sorting or plotting logic.
+22. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
+23. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
 
 If the route is still ambiguous, ask the smallest possible clarification set.
 
@@ -77,7 +78,7 @@ Use these intake rules:
 - `symmetry sidecars` -> keep them tied to the exact SCF that produced them; if one exists for periodic GW, verify the full required set before LibRPA
 - `.abfs` files -> treat as authoritative candidates for `ABFS_ORBITAL` only after confirming that their element, radius cutoff, and angular-momentum coverage match the active PP / NAO setup
 - `logs/results` -> start in Debug mode first
-- `archives` -> unpack and classify before asking more questions
+- `archives` -> unpack and classify before asking more questions; for `paper_dataset_GW_pseudopotential+NAO.zip`, also load `references/paper-dataset-material-workflow.md`
 
 If the user did not provide PP/NAO/ABFS assets, consult the bundled library described in `references/pp-nao-abfs-library.md`.
 

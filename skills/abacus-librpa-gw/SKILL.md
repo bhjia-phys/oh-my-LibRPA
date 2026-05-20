@@ -14,6 +14,12 @@ For periodic-solid `g0w0_band`, `qsgw_band0`, symmetry, shrink, or head-wing
 work, also load `skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md`
 and treat it as the stricter route contract.
 
+For the user-provided `paper_dataset_GW_pseudopotential+NAO.zip` benchmark
+materials, also load
+`skills/oh-my-librpa/references/paper-dataset-material-workflow.md`. Treat the
+dataset case as the physical source of truth, then normalize only stale ABACUS
+API keywords and route glue needed by the current validated Si/MgO workflow.
+
 If the case uses a locally merged ABACUS checkout or locally patched helper scripts, also apply `references/abacus-merge-compat.md`.
 
 ## Required Checks
@@ -144,6 +150,9 @@ Use the following alignment for spin-sensitive GW workflows:
 - Ask the user how many k-points to use in `KPT`; default to `8 8 8`
 - For Si/MgO benchmark reproduction, prefer the validated public-style
   workflow in `skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md`
+- For any material from `paper_dataset_GW_pseudopotential+NAO.zip`, start from
+  the dataset source directory or documented `shared_input_*` companion
+  instead of inventing PP/NAO/ABFS, k-path, or threshold choices
 - Only enable `output_gw_sigc_mat_rf = t` when the user explicitly asks to open NSCF band continuation; for a materialized case, pass `--enable-nscf-band-continuation true`
 - `KPT_nscf` must be provided by the user
 - Materialize `env.sh` from a host profile before batch submission so `python3_exec`, `abacus_work`, `librpa_work`, and the MPI launcher are explicit

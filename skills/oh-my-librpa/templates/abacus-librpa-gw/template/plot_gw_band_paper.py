@@ -71,13 +71,30 @@ def read_gw(path: Path):
     return data[:, 1:4], data[:, 4::2], data[:, 5::2]
 
 
-def occupied_band_count_from_band_out(occ: np.ndarray) -> int:
+def infer_occupied_band_count(occ: np.ndarray, tol: float = 1.0e-8) -> int:
+    occ = np.asarray(occ, dtype=float)
+    if occ.size == 0:
+        raise ValueError('Failed to read any occupations from band_out.')
+
+    positive = occ > tol
+    if not np.any(positive):
+        raise ValueError('Failed to infer occupied bands: all occupations are zero.')
+
     nocc = 0
-    for value in occ:
-        if abs(float(value)) <= 1.0e-12:
+    for is_positive in positive:
+        if is_positive:
+            nocc += 1
+            continue
+        if nocc > 0:
             break
-        nocc += 1
+
+    if nocc <= 0:
+        raise ValueError('Failed to infer occupied bands from occupation columns.')
     return nocc
+
+
+def occupied_band_count_from_band_out(occ: np.ndarray) -> int:
+    return infer_occupied_band_count(occ)
 
 
 def sort_gw_band_slice_by_energy(aux: np.ndarray, ene: np.ndarray, start: int, stop: int) -> tuple[np.ndarray, np.ndarray]:

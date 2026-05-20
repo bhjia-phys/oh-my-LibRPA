@@ -68,6 +68,7 @@ for path in \
   "$installed_root/docs/guide/abacus-librpa-g0w0-qsgw.md" \
   "$installed_root/docs/guide/fhi-aims-librpa-qsgw.md" \
   "$workspace/skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md" \
+  "$workspace/skills/oh-my-librpa/references/paper-dataset-material-workflow.md" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \
   "$installed_root/templates/abacus-librpa-gw/template/librpa.qsgw_band0.in" \
   "$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py" \
@@ -93,6 +94,14 @@ if grep -q 'Do not use `geometry.in`, `librpa.d/`, or `self_energy/` alone' "$wo
   pass 'FHI-aims skill rejects weak ownership markers on their own'
 else
   fail 'FHI-aims skill still accepts weak ownership markers without stronger evidence'
+fi
+
+if grep -q 'paper_dataset_GW_pseudopotential+NAO.zip' "$workspace/skills/oh-my-librpa/SKILL.md" \
+  && grep -q 'SiC__src_pca1e-6' "$workspace/skills/oh-my-librpa/references/paper-dataset-material-workflow.md" \
+  && grep -q 'Do not hard-code `nocc = 4`' "$workspace/skills/oh-my-librpa/references/paper-dataset-material-workflow.md"; then
+  pass 'paper dataset material workflow is routed and records source-completeness plus occupation rules'
+else
+  fail 'paper dataset material workflow routing or key safeguards are missing'
 fi
 
 if [[ -f "$installed_root/install-state.env" ]]; then
@@ -792,6 +801,33 @@ EOF
   fi
 else
   pass 'python3 not available for plot_gw_band_paper.py near-Fermi-only reordering regression test; skipped'
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  plot_script="$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py"
+  if python3 - <<EOF >/dev/null 2>&1
+import importlib.util
+from pathlib import Path
+import numpy as np
+
+path = Path("$plot_script")
+spec = importlib.util.spec_from_file_location("plot_gw_band_paper", path)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+weighted = np.array([0.11328125] * 8 + [0.0] * 4)
+binary = np.array([2.0, 2.0, 0.0, 0.0])
+
+assert mod.infer_occupied_band_count(weighted) == 8
+assert mod.infer_occupied_band_count(binary) == 2
+EOF
+  then
+    pass 'plot_gw_band_paper.py infers occupied bands from weighted or binary occupation columns'
+  else
+    fail 'plot_gw_band_paper.py failed weighted/binary occupation-count inference'
+  fi
+else
+  pass 'python3 not available for plot_gw_band_paper.py occupation-count regression test; skipped'
 fi
 
 plot_case="$tmp_dir/plot-case"

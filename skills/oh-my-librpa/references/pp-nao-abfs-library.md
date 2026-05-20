@@ -14,6 +14,11 @@ Start from:
 
 That README records tested system-level combinations and also helps infer element-wise preferred PP-family choices.
 
+If the user-provided `paper_dataset_GW_pseudopotential+NAO.zip` is available,
+prefer `references/paper-dataset-material-workflow.md` before choosing assets
+by hand. That dataset records material source directories, table gaps, and
+which entries are complete rerun bundles versus result-only references.
+
 ## Selection rule
 
 Choose assets in this order:

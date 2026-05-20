@@ -14,6 +14,12 @@ Use that reference when reproducing:
 - Si QSGW branch comparisons: refreshed head+wing, frozen head+wing, and
   head-only frozen.
 - MgO paper-strict G0W0 using the user-provided 8au Mg/O PP/NAO/ABFS bundle.
+- The user-provided `paper_dataset_GW_pseudopotential+NAO.zip` benchmark
+  materials through one material-independent ABACUS -> PyATB -> LibRPA route.
+
+For the full dataset-material contract, see:
+
+- `skills/oh-my-librpa/references/paper-dataset-material-workflow.md`
 
 ## Current Validated Benchmarks
 
@@ -31,7 +37,12 @@ MgO, 8x8x8, paper-strict G0W0:
 - paper-dataset reference: `7.1921781 eV`
 - delta: `8.0e-7 eV`
 
-MgO QSGW is still a pending validation target as of 2026-05-20.
+MgO QSGW status as of 2026-05-20:
+
+- `qsgw_band0` iteration 1 completed successfully on the Si-style
+  symmetry+shrink+head-wing route.
+- LibRPA `Hamiltonian_gap`: about `7.7936 eV`.
+- Full QSGW convergence and plotting are still pending validation.
 
 ## Non-Negotiable Workflow Points
 
@@ -45,6 +56,8 @@ MgO QSGW is still a pending validation target as of 2026-05-20.
 - For `qsgw_band0`, explicitly record the Hamiltonian cut:
   `qsgw_band0_unoccupied_keep = 10`, `qsgw_band0_cut_mode = 2`,
   `qsgw_band0_cut_shift_ha = 20.0`.
+- Infer occupied bands from `band_out` or band occupations for each material.
+  Accept both binary and weighted positive occupations; do not hard-code Si's
+  occupied-band count in MgO or other materials.
 - Submit real calculations through Slurm. Do not run numerical workloads on
   dongfang login nodes.
-

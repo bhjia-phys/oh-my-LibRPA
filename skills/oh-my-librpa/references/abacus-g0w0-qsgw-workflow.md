@@ -4,6 +4,12 @@ Load this reference for periodic ABACUS-owned solid workflows that ask for
 `g0w0_band`, `qsgw_band0`, head/wing correction, shrink, symmetry, or Si/MgO
 benchmark reproduction.
 
+If the source is the user-provided `paper_dataset_GW_pseudopotential+NAO.zip`
+or the user asks for all paper benchmark materials, also load
+`paper-dataset-material-workflow.md`. That reference maps the dataset material
+directories to this stricter stage order and records which entries are
+complete source bundles versus result-only references.
+
 ## Provenance Snapshot
 
 Use these versions as the currently validated dongfang reference, recorded on
@@ -173,6 +179,11 @@ The `qsgw_band0` Hamiltonian cut means:
 For Si, `N0 = 4`, so the production default retains all 4 occupied bands plus
 10 unoccupied bands.
 
+This Si value is only an example. For every other material, infer `N0` from
+the Fermi level or occupations in the active run. MgO has 8 occupied bands in
+the current band-path QSGW output, so a Si-specific `N0 = 4` postprocessor
+gives a false many-eV gap.
+
 ## Head/Wing Branches
 
 Use these branch labels consistently:
@@ -248,6 +259,17 @@ MgO QSGW is not yet a validated benchmark as of 2026-05-20. The active test
 uses the same Si QSGW route but changes SCF to `symmetry 1` so the required
 symmetry sidecars are generated.
 
+The first MgO `qsgw_band0` iteration on this route completed on 2026-05-20:
+
+- run root:
+  `/data/home/df_iopcas_bhj/ai-runs/mgo-qsgw-band0-paper-k888-headwing-iter1-scf-sym1-20260520-115919`
+- job: `1826350`
+- LibRPA `Hamiltonian_gap`: about `7.7936 eV`
+- `QSGW_band_spin_1_1.dat` was written
+
+Do not use a gap extractor that assumes Si's four occupied bands for this MgO
+output. Use `band_out`/occupation columns and infer the occupied manifold.
+
 ## Minimal Validation Before Submission
 
 Before `sbatch`, verify:
@@ -262,4 +284,7 @@ Before `sbatch`, verify:
   `preprocess_abacus_for_librpa_band.py` are a matched helper quartet.
 - QSGW runs explicitly record `qsgw_band0_unoccupied_keep`,
   `qsgw_band0_cut_mode`, and `qsgw_band0_cut_shift_ha`.
-
+- Gap extraction and plotting infer the occupied manifold from the current
+  material instead of using a hard-coded Si occupied-band count. Accept both
+  binary occupations such as `2.0/0.0` and weighted positive occupations such
+  as MgO's `0.113.../0.0`.

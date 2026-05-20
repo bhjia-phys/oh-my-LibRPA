@@ -85,6 +85,12 @@ When preparing a new GW case, use the following priority:
 ## Tested system-level recommendations
 
 The `Gap (eV)` column records the band gap associated with the tested setup.
+Most entries below come from
+`paper_dataset_GW_pseudopotential+NAO.zip/benchmark_figure_and_tables/GW_comparison_selected.csv`.
+When that dataset is available, prefer the exact `source_dir` recorded there
+over reconstructing a case from filenames. Some benchmark result directories
+are output-only; in those cases use the documented `shared_input_*` companion
+or ask for a complete source bundle before claiming the case can be rerun.
 
 | System | Gap (eV) | Recommended setup |
 |---|---:|---|
@@ -105,6 +111,16 @@ The `Gap (eV)` column records the band gap associated with the tested setup.
 | CdS | 2.076 | Cd: `dojo`, S: `dojo` |
 | CaO | 6.368 | Ca: `sg15`, O: `sg15_8au` |
 | LiF | 14.000 | Li: `sg15`, F: `sg15` |
+
+Dataset source caveats:
+
+- `CaO__src_24freq` and `GaP__src_gw_shrink_chi` are result-oriented in the
+  zip; use `shared_input_CaO_1mpi` and `shared_input_GaP_gw` for reruns.
+- `SiC__src_pca1e-6` is result-only in the inspected zip; treat its ABACUS
+  band files as reference data unless a complete source bundle is supplied.
+- `MgO__src_fix_gap` is the older benchmark-table setup with `7.392 eV`. The
+  strict MgO 8au reproduction uses a separate `MgO_compression` case and gives
+  `7.1921781 eV`.
 
 ---
 

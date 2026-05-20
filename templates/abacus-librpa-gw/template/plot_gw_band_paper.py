@@ -66,6 +66,32 @@ def read_occ_from_band_out(path: Path) -> np.ndarray:
     return np.array(occ)
 
 
+def infer_occupied_band_count(occ: np.ndarray, tol: float = 1.0e-8) -> int:
+    occ = np.asarray(occ, dtype=float)
+    if occ.size == 0:
+        raise ValueError('Failed to read any occupations from band_out.')
+
+    positive = occ > tol
+    if not np.any(positive):
+        raise ValueError('Failed to infer occupied bands: all occupations are zero.')
+
+    nocc = 0
+    for is_positive in positive:
+        if is_positive:
+            nocc += 1
+            continue
+        if nocc > 0:
+            break
+
+    if nocc <= 0:
+        raise ValueError('Failed to infer occupied bands from occupation columns.')
+    return nocc
+
+
+def occupied_band_count_from_band_out(occ: np.ndarray) -> int:
+    return infer_occupied_band_count(occ)
+
+
 def read_gw(path: Path):
     data = np.loadtxt(path)
     return data[:, 1:4], data[:, 4::2], data[:, 5::2]
@@ -202,10 +228,10 @@ def main() -> None:
     special_x = x[special_idx]
     labels = labels[:len(special_x)]
 
-    occ_mask_1d = occ > 0.5
-    nocc = int(np.count_nonzero(occ_mask_1d))
-    if nocc <= 0:
-        raise ValueError('Failed to determine occupied bands from band_out.')
+    nocc = infer_occupied_band_count(occ)
+    if nocc > ene_gw.shape[1]:
+        raise ValueError(f'band_out occupations imply nocc={nocc}, but GW file has only {ene_gw.shape[1]} bands.')
+    occ_mask_1d = np.arange(ene_gw.shape[1]) < nocc
 
     b0 = max(0, nocc - max(1, args.valence_bands))
     b1 = min(ene_gw.shape[1], nocc + max(1, args.conduction_bands))
