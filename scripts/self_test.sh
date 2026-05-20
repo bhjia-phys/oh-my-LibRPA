@@ -251,6 +251,7 @@ qsgw_hr_export_full_mp_rgrid = t
 qsgw_band0_unoccupied_keep = 10
 qsgw_band0_cut_mode = 2
 qsgw_band0_cut_shift_ha = 20.0
+qsgw_band0_update_hartree = f
 EOF
 
 if "$installed_root/scripts/check_consistency.sh" "$case_qsgw" --mode gw --system-type solid >/dev/null 2>&1; then

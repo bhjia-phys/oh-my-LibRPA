@@ -49,6 +49,24 @@ Never copy generated files such as `OUT.ABACUS`, `band_out`, `coulomb_*`,
 `Cs_*`, `librpa.d`, `LibRPA*.out`, or old `GW_band_spin_*` into a new run as
 if they were source inputs.
 
+## Two Valid Periodic Routes
+
+Keep these routes distinct in reports and scripts:
+
+- `paper_strict_full_bz_g0w0`: reproduce a published dataset case exactly.
+  If the archived input used `symmetry -1`, keep the full-BZ route for that
+  one reproduction. This may process all MP q-points, for example 512 q-points
+  on an 8x8x8 grid.
+- `production_symmetry_qsgw`: use `INPUT_scf: symmetry 1` and
+  `INPUT_nscf: symmetry -1`, then let LibRPA consume the ABACUS symmetry
+  sidecars. This is the validated route for `qsgw_band0`, head-wing refresh,
+  shrink, and continued QSGW iterations.
+
+Do not compare wall times across these routes as if they used the same q-grid.
+For example, a strict MgO G0W0 run with 512 full-BZ q-points can take much
+longer than a symmetry QSGW iteration using the 29 irreducible q-points from
+the same 8x8x8 mesh.
+
 ## ABACUS Settings
 
 Use the current ABACUS keyword names. Reject stale inputs containing
@@ -149,13 +167,14 @@ Start from the G0W0 preset and replace the task block with:
 
 ```text
 task = qsgw_band0
-max_iter = 10
+max_iter = <target iteration for this LibRPA call>
 qsgw_checkpoint_every = 1
 qsgw_export_hamiltonian_for_pyatb = t
 qsgw_hr_export_full_mp_rgrid = t
 qsgw_band0_unoccupied_keep = 10
 qsgw_band0_cut_mode = 2
 qsgw_band0_cut_shift_ha = 20.0
+qsgw_band0_update_hartree = f
 output_dir = librpa.d/
 ```
 
@@ -167,14 +186,42 @@ qsgw_restart_dir = librpa.d/qsgw_checkpoints/
 qsgw_restart_iteration = <last completed iteration>
 ```
 
-The `qsgw_band0` Hamiltonian cut means:
+Use `qsgw_band0_update_hartree = f` for the current ABACUS benchmark route
+unless the test explicitly studies Hartree updates. Hartree-update support is
+present in the validated LibRPA branch, but the Si/MgO head-wing-refresh
+benchmarks keep it disabled to preserve the legacy comparison.
+
+For head-wing refresh, do not ask one LibRPA call to run all QSGW iterations
+without refreshing PyATB data. Run one outer iteration at a time:
+
+1. Let LibRPA finish iteration `i` and write
+   `librpa.d/qsgw_checkpoints/iter_<i>/H0_GW_spin_...bin`.
+2. Use the exported `hrs*_nao_qsgw_iter_<i>.csr` files to regenerate the
+   full-MP-grid PyATB/head-wing inputs.
+3. Launch the next LibRPA call with `qsgw_restart = t`,
+   `qsgw_restart_iteration = i`, and `max_iter = i + 1`.
+4. Stop when the log reports `Converged after N iterations`, or when the
+   campaign cap is reached. Use 20 iterations as the current conservative cap
+   for MgO-style convergence tests unless the user asks for a different limit.
+
+The checkpoint binaries and the HR exports have different roles:
+
+- `H0_GW_spin_...bin` under `librpa.d/qsgw_checkpoints/` is the restart state
+  on the active LibRPA k-grid.
+- `hrs*_nao_qsgw_iter_*.csr` is the real-space Hamiltonian export used to
+  rebuild PyATB/head-wing data for the next outer iteration.
+
+The `qsgw_band0` Hamiltonian cut is material independent in form:
 
 - `N0` is counted from eigenvalues below the Fermi level at each k/spin.
 - All occupied states are retained.
 - The first `qsgw_band0_unoccupied_keep` unoccupied states are retained.
-- For higher states, off-diagonal H0_GW elements are zeroed; diagonal elements
-  are reset to the KS diagonal plus `qsgw_band0_cut_shift_ha` when
-  `qsgw_band0_cut_mode = 2`.
+- `qsgw_band0_cut_mode = 0`: do not apply this active-window cut.
+- `qsgw_band0_cut_mode = 1`: outside the active window, zero off-diagonal
+  H0_GW elements and reset diagonal elements to the KS diagonal.
+- `qsgw_band0_cut_mode = 2`: outside the active window, zero off-diagonal
+  H0_GW elements and reset diagonal elements to the KS diagonal plus
+  `qsgw_band0_cut_shift_ha`.
 
 For Si, `N0 = 4`, so the production default retains all 4 occupied bands plus
 10 unoccupied bands.
@@ -244,7 +291,7 @@ Use the user-provided paper-strict MgO assets as the primary MgO benchmark:
 - band path: `G-K-L-U-W-W2-X` with 20 segments and final 1-point endpoint
 - current ABACUS keyword: `exx_singularity_correction massidda`
 
-The strict MgO G0W0 reproduction completed on 2026-05-20:
+The strict full-BZ MgO G0W0 reproduction completed on 2026-05-20:
 
 - run root:
   `/data/home/df_iopcas_bhj/ai-runs/mgo-paper-strict-g0w0-thr1e-3-current-abacus-20260519-141827`
@@ -255,17 +302,22 @@ The strict MgO G0W0 reproduction completed on 2026-05-20:
 - reference paper-dataset gap: `7.1921781 eV`
 - delta from reference: `8.0e-7 eV`
 
-MgO QSGW is not yet a validated benchmark as of 2026-05-20. The active test
-uses the same Si QSGW route but changes SCF to `symmetry 1` so the required
-symmetry sidecars are generated.
+MgO QSGW uses the same production symmetry+shrink+head-wing-refresh route as
+Si, with the Mg/O 8au paper-strict PP/NAO/ABFS bundle. The active run root is:
 
-The first MgO `qsgw_band0` iteration on this route completed on 2026-05-20:
+- `/data/home/df_iopcas_bhj/ai-runs/mgo-qsgw-band0-paper-k888-headwing-iter1-scf-sym1-20260520-115919`
 
-- run root:
-  `/data/home/df_iopcas_bhj/ai-runs/mgo-qsgw-band0-paper-k888-headwing-iter1-scf-sym1-20260520-115919`
-- job: `1826350`
-- LibRPA `Hamiltonian_gap`: about `7.7936 eV`
-- `QSGW_band_spin_1_1.dat` was written
+Validated partial MgO QSGW data as of 2026-05-20:
+
+| route | iteration | gap |
+| --- | ---: | ---: |
+| KS/PBE band-path baseline | 0 | 4.719920 eV |
+| strict full-BZ G0W0 baseline | 0 | 7.192179 eV |
+| production `qsgw_band0` head-wing refresh | 1 | 7.793630 eV |
+| production `qsgw_band0` head-wing refresh | 2 | 8.208060 eV |
+
+The continuation job submitted to iteration 20 is `1829520`. Treat later MgO
+iterations as pending until the run logs and extracted gaps have been checked.
 
 Do not use a gap extractor that assumes Si's four occupied bands for this MgO
 output. Use `band_out`/occupation columns and infer the occupied manifold.
@@ -282,8 +334,13 @@ Before `sbatch`, verify:
 - Symmetry sidecars are present when LibRPA symmetry flags are enabled.
 - `get_diel.py`, `output_librpa.py`, `perform.sh`, and
   `preprocess_abacus_for_librpa_band.py` are a matched helper quartet.
+- `paper_strict_full_bz_g0w0` and `production_symmetry_qsgw` are not mixed in
+  the same staged run unless the report explicitly labels the route change.
 - QSGW runs explicitly record `qsgw_band0_unoccupied_keep`,
-  `qsgw_band0_cut_mode`, and `qsgw_band0_cut_shift_ha`.
+  `qsgw_band0_cut_mode`, `qsgw_band0_cut_shift_ha`, and
+  `qsgw_band0_update_hartree`.
+- QSGW head-wing-refresh continuation uses the previous iteration's HR export
+  to regenerate PyATB data before the next LibRPA restart.
 - Gap extraction and plotting infer the occupied manifold from the current
   material instead of using a hard-coded Si occupied-band count. Accept both
   binary occupations such as `2.0/0.0` and weighted positive occupations such

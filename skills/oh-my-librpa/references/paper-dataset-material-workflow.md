@@ -117,6 +117,12 @@ For SOC cases such as GaAs SOC/XSOC:
   consistently;
 - use SOC pseudopotentials only.
 
+When the goal is exact paper-table reproduction, keep the archived
+full-BZ/no-symmetry route if that is what the source bundle used. When the
+goal is a continued QSGW calculation with refreshed head/wing, switch to the
+validated production symmetry route below and label the route change in the
+run report.
+
 ## QSGW Upgrade Rule
 
 Use the validated G0W0 case as the source for QSGW, but do not reuse a
@@ -131,22 +137,50 @@ For `qsgw_band0` with head-wing refresh:
 
 ```text
 task = qsgw_band0
-max_iter = 10
+max_iter = <target iteration for this LibRPA call>
 qsgw_checkpoint_every = 1
 qsgw_export_hamiltonian_for_pyatb = t
 qsgw_hr_export_full_mp_rgrid = t
 qsgw_band0_unoccupied_keep = 10
 qsgw_band0_cut_mode = 2
 qsgw_band0_cut_shift_ha = 20.0
+qsgw_band0_update_hartree = f
 ```
 
 5. Between refresh iterations, rebuild the PyATB/head-wing input from the
    exported `hrs*_nao_qsgw_iter_*.csr` Hamiltonian.
 
+For a refreshed head-wing campaign, use one LibRPA outer step per refresh:
+
+1. Finish iteration `i`.
+2. Keep the checkpoint directory `librpa.d/qsgw_checkpoints/iter_<i>/` for
+   restart.
+3. Use `hrs*_nao_qsgw_iter_<i>.csr` to regenerate full-MP-grid PyATB/head-wing
+   inputs.
+4. Restart LibRPA with `qsgw_restart_iteration = i` and
+   `max_iter = i + 1`.
+5. Stop at `Converged after N iterations` or at the chosen campaign cap. Use
+   20 iterations as the current default cap for open MgO-style tests.
+
+Checkpoint binaries and HR exports are not interchangeable. The checkpoint is
+the restart state; the HR export is the bridge back to PyATB.
+
 The Hamiltonian cut is material independent in form but material dependent in
 `N0`: LibRPA counts occupied bands from the Fermi level. All occupied bands are
 kept, then the first `qsgw_band0_unoccupied_keep` unoccupied bands are kept.
 Do not assume Si's `N0 = 4` for MgO, BN, GaAs, or any other material.
+
+Cut modes:
+
+- `qsgw_band0_cut_mode = 0`: no active-window cut.
+- `qsgw_band0_cut_mode = 1`: outside the occupied plus kept-unoccupied
+  window, zero off-diagonal H0_GW and reset the diagonal to KS.
+- `qsgw_band0_cut_mode = 2`: same off-diagonal cut, but reset the outside
+  diagonal to KS plus `qsgw_band0_cut_shift_ha`.
+
+Hartree updates are available in the current LibRPA branch but are disabled in
+the validated Si/MgO ABACUS route by `qsgw_band0_update_hartree = f`. Enable
+them only in a separately labeled Hartree-update study.
 
 ## Occupation and Gap Extraction Rule
 
@@ -169,6 +203,11 @@ Post-processing must infer occupations from the current run:
 - Si: use `Si/sg15` as the public-style reference setup.
 - MgO strict paper reproduction: use `Mg/sg15_8au` and `O/sg15_8au` from the
   user dataset; this reproduced the `7.1921781 eV` paper-dataset G0W0 gap.
+- MgO QSGW production route: use the same 8au Mg/O assets, SCF
+  `symmetry 1`, NSCF `symmetry -1`, shrink, and refreshed head+wing. The
+  current validated partial data are iteration 1 `7.793630 eV` and iteration 2
+  `8.208060 eV`; the continuation to iteration 20 is still a running/pending
+  convergence campaign until logs and gaps are rechecked.
 - MgO benchmark-table reproduction: `MgO__src_fix_gap` is a different older
   10au/2f2g setup with table gap `7.392 eV`; do not mix it with the strict
   MgO 8au test.
@@ -192,5 +231,9 @@ Before saying a material is ready to run:
 - Current ABACUS keywords have replaced archived stale keys.
 - Shrink settings match the presence of ABFS/shrink artifacts.
 - For QSGW refresh, SCF sidecars and full-MP-grid PyATB generation are ready.
+- For QSGW refresh, the previous iteration's HR export, not only the
+  checkpoint binaries, is available before launching the next iteration.
+- The route label distinguishes exact full-BZ paper G0W0 reproduction from the
+  symmetry+shrink QSGW production route.
 - The gap/plot script infers occupied bands from the run rather than from a
   material-specific constant.

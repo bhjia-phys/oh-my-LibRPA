@@ -4,7 +4,8 @@ Use this reference after `oh-my-librpa` has already classified the task as GW.
 
 For periodic-solid `g0w0_band`, `qsgw_band0`, shrink, symmetry, or head-wing
 work, load `abacus-g0w0-qsgw-workflow.md` before editing inputs. That file is
-the strict Si/MgO public-style benchmark route.
+the material-independent public-style benchmark route for Si, MgO, and the
+user-provided ABACUS paper dataset.
 
 ## Route selection
 
@@ -58,16 +59,20 @@ For QSGW band work, `qsgw_band0` is still a GW-family task. Keep the same
 head-wing/shrink/symmetry defaults and add:
 
 - `task = qsgw_band0`
-- `max_iter = 10`
+- `max_iter = <target iteration for this LibRPA call>`
 - `qsgw_checkpoint_every = 1`
 - `qsgw_export_hamiltonian_for_pyatb = t`
 - `qsgw_hr_export_full_mp_rgrid = t`
 - `qsgw_band0_unoccupied_keep = 10`
 - `qsgw_band0_cut_mode = 2`
 - `qsgw_band0_cut_shift_ha = 20.0`
+- `qsgw_band0_update_hartree = f`
 
 The QSGW Hamiltonian cut must be written into `librpa.in` for reproducibility.
 Do not rely on code defaults when preparing a production or benchmark case.
+For refreshed head-wing QSGW, run one outer step per refresh: finish iteration
+`i`, rebuild PyATB/head-wing inputs from `hrs*_nao_qsgw_iter_<i>.csr`, then
+restart from `librpa.d/qsgw_checkpoints/iter_<i>/` with `max_iter = i + 1`.
 
 Only flip `output_gw_sigc_mat_rf` to `t` when the user explicitly asks to open NSCF band continuation.
 When materializing a fresh GW case for that request, pass `--enable-nscf-band-continuation true`.

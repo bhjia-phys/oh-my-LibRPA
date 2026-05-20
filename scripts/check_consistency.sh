@@ -526,6 +526,7 @@ if [[ "$resolved_mode" == "gw" && "$task_value" == "qsgw_band0" ]]; then
   qsgw_keep="$(trim "$(get_value "$librpa" "qsgw_band0_unoccupied_keep" || true)")"
   qsgw_cut_mode="$(trim "$(get_value "$librpa" "qsgw_band0_cut_mode" || true)")"
   qsgw_cut_shift="$(trim "$(get_value "$librpa" "qsgw_band0_cut_shift_ha" || true)")"
+  qsgw_update_hartree="$(trim "$(get_value "$librpa" "qsgw_band0_update_hartree" || true)")"
 
   if [[ -z "$qsgw_keep" ]]; then
     note_fail "qsgw_band0 requires explicit qsgw_band0_unoccupied_keep; default validated Si workflow uses 10"
@@ -549,6 +550,16 @@ if [[ "$resolved_mode" == "gw" && "$task_value" == "qsgw_band0" ]]; then
     note_pass "qsgw_band0_cut_shift_ha = 20.0"
   else
     note_warn "qsgw_band0_cut_shift_ha=$qsgw_cut_shift differs from the validated default 20.0 Ha"
+  fi
+
+  if [[ -z "$qsgw_update_hartree" ]]; then
+    note_fail "qsgw_band0 requires explicit qsgw_band0_update_hartree; use f for the validated ABACUS head-wing-refresh benchmark route unless studying Hartree updates"
+  elif [[ "$qsgw_update_hartree" == "f" ]]; then
+    note_pass "qsgw_band0_update_hartree = f"
+  elif [[ "$qsgw_update_hartree" == "t" ]]; then
+    note_warn "qsgw_band0_update_hartree=t; record this as a separate Hartree-update study, not the default Si/MgO benchmark route"
+  else
+    note_fail "qsgw_band0_update_hartree must be t or f"
   fi
 
   replace_w_head_value="$(trim "$(get_value "$librpa" "replace_w_head" || true)")"

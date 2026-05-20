@@ -127,7 +127,9 @@ For Windows + Git Bash agent updates, see:
 - **molecular GW** short route
 - **periodic GW** full route
 - **periodic GW symmetry** lane with ABACUS sidecars staged for LibRPA
-- **periodic ABACUS G0W0/QSGW** route for public-style Si and paper-strict MgO benchmarks
+- **periodic ABACUS G0W0/QSGW** route for public-style Si, paper-strict MgO,
+  and dataset-material workflows that preserve PP/NAO/ABFS settings while
+  normalizing only current-interface keys
 - **RPA** split from GW-only preprocessing
 - **FHI-aims + LibRPA QSGW/G0W0** supplement for case mirroring and staged campaigns
 - spin / SOC consistency checks across helper scripts and `librpa.in`
@@ -157,11 +159,16 @@ For Windows + Git Bash agent updates, see:
 Molecule GW:      SCF -> LibRPA
 Periodic GW:      SCF -> pyatb -> NSCF -> preprocess -> LibRPA
 Periodic GW sym:  SCF(symmetry=1,rpa=1,no SOC) -> copy sidecars -> pyatb -> NSCF(symmetry=-1) -> preprocess -> LibRPA(symmetry flags)
-Periodic QSGW:    G0W0-style source bundle -> qsgw_band0 -> checkpoint/export H0_GW -> optional PyATB/head-wing refresh -> next qsgw_band0 restart
+Periodic QSGW:    source bundle -> SCF(symmetry=1) -> full-grid PyATB -> NSCF(symmetry=-1) -> qsgw_band0 -> checkpoint + HR export -> refresh PyATB/head-wing -> next restart
 RPA:              SCF -> LibRPA
 ```
 
 For SOC cases, do not use the periodic symmetry lane. Keep the ABACUS side on `symmetry = -1` and do not enable the LibRPA symmetry flags.
+
+For exact paper-table G0W0 reproduction, a source bundle may intentionally stay
+on the archived full-BZ/no-symmetry route. For continued QSGW with refreshed
+head/wing, use the symmetry+shrink production route and record the LibRPA
+branch, ABACUS branch, PyATB source, Hamiltonian cut, and Hartree-update flag.
 
 The agent should decide the lane from the user's files, intent, and system type — then explain what it is doing and why.
 

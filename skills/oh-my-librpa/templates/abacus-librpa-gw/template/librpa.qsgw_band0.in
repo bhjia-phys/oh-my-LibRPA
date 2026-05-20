@@ -27,12 +27,18 @@ libri_g0w0_threshold_C = 1e-5
 libri_g0w0_threshold_G = 1e-5
 libri_g0w0_threshold_Wc = 1e-6
 
-max_iter = 10
+# For refreshed head-wing campaigns, run one outer step per PyATB refresh:
+# set max_iter to the next target iteration, then restart from the previous
+# checkpoint after regenerating PyATB from hrs*_nao_qsgw_iter_*.csr.
+max_iter = 1
 qsgw_checkpoint_every = 1
 qsgw_export_hamiltonian_for_pyatb = t
 qsgw_hr_export_full_mp_rgrid = t
 qsgw_band0_unoccupied_keep = 10
 qsgw_band0_cut_mode = 2
 qsgw_band0_cut_shift_ha = 20.0
+qsgw_band0_update_hartree = f
+# qsgw_restart = t
+# qsgw_restart_dir = librpa.d/qsgw_checkpoints/
+# qsgw_restart_iteration = <last completed iteration>
 output_dir = librpa.d/
-

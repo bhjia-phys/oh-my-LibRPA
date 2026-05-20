@@ -14,6 +14,8 @@ Use that reference when reproducing:
 - Si QSGW branch comparisons: refreshed head+wing, frozen head+wing, and
   head-only frozen.
 - MgO paper-strict G0W0 using the user-provided 8au Mg/O PP/NAO/ABFS bundle.
+- MgO or other dataset-material QSGW runs that continue through one
+  head-wing-refresh outer iteration at a time.
 - The user-provided `paper_dataset_GW_pseudopotential+NAO.zip` benchmark
   materials through one material-independent ABACUS -> PyATB -> LibRPA route.
 
@@ -39,10 +41,13 @@ MgO, 8x8x8, paper-strict G0W0:
 
 MgO QSGW status as of 2026-05-20:
 
-- `qsgw_band0` iteration 1 completed successfully on the Si-style
-  symmetry+shrink+head-wing route.
-- LibRPA `Hamiltonian_gap`: about `7.7936 eV`.
-- Full QSGW convergence and plotting are still pending validation.
+- The production symmetry+shrink+head-wing-refresh route is running from the
+  same 8au Mg/O assets.
+- `qsgw_band0` iteration 1 gap: `7.793630 eV`.
+- `qsgw_band0` iteration 2 gap after refreshed head/wing: `8.208060 eV`.
+- Continuation to iteration 20 is still pending validation; do not treat the
+  final MgO QSGW gap as established until the run logs and extracted gaps are
+  rechecked.
 
 ## Non-Negotiable Workflow Points
 
@@ -50,12 +55,20 @@ MgO QSGW status as of 2026-05-20:
 - Keep ABACUS, PyATB, and LibRPA provenance in the run report.
 - Use `exx_singularity_correction massidda`; do not use stale
   `exx_use_ewald`.
+- Distinguish exact full-BZ paper G0W0 reproduction from the
+  symmetry+shrink production QSGW route. They can use the same physical
+  PP/NAO/ABFS setup but not the same q-point workload.
 - For QSGW head-wing refresh, SCF must generate symmetry sidecars with
   `symmetry 1`; NSCF band-path calculation stays at `symmetry -1`.
 - Generate PyATB data on the full regular MP grid in public x-fast order.
 - For `qsgw_band0`, explicitly record the Hamiltonian cut:
   `qsgw_band0_unoccupied_keep = 10`, `qsgw_band0_cut_mode = 2`,
-  `qsgw_band0_cut_shift_ha = 20.0`.
+  `qsgw_band0_cut_shift_ha = 20.0`, and
+  `qsgw_band0_update_hartree = f` unless a Hartree-update test is explicitly
+  requested.
+- For refreshed QSGW, each next LibRPA call must restart from the previous
+  checkpoint and regenerate PyATB/head-wing data from the previous
+  `hrs*_nao_qsgw_iter_*.csr` HR export first.
 - Infer occupied bands from `band_out` or band occupations for each material.
   Accept both binary and weighted positive occupations; do not hard-code Si's
   occupied-band count in MgO or other materials.
