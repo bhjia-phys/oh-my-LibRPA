@@ -66,7 +66,9 @@ for path in \
   "$installed_root/rules/cards/server-profile-runtime.yml" \
   "$installed_root/registry/host-profiles/generic-hpc-example.env" \
   "$installed_root/docs/guide/abacus-librpa-g0w0-qsgw.md" \
+  "$installed_root/docs/guide/oml-content-map.md" \
   "$installed_root/docs/guide/fhi-aims-librpa-qsgw.md" \
+  "$workspace/skills/oh-my-librpa/references/oml-content-map.md" \
   "$workspace/skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md" \
   "$workspace/skills/oh-my-librpa/references/paper-dataset-material-workflow.md" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \

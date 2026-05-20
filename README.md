@@ -18,6 +18,8 @@
     ·
     <a href="docs/guide/chat-guidance.md"><strong>Chat guide</strong></a>
     ·
+    <a href="docs/guide/oml-content-map.md"><strong>Content map</strong></a>
+    ·
     <a href="examples/si-k444-gw/README.md"><strong>Si GW example</strong></a>
     ·
     <a href="docs/guide/abacus-librpa-g0w0-qsgw.md"><strong>ABACUS G0W0/QSGW</strong></a>
@@ -176,11 +178,12 @@ The agent should decide the lane from the user's files, intent, and system type 
 
 ## Documentation map
 
-If you only open three pages, open these:
+If you only open a few pages, open these:
 
 | Page | What it is for |
 | --- | --- |
 | [`docs/guide/installation.md`](docs/guide/installation.md) | Full install flow for agents and humans |
+| [`docs/guide/oml-content-map.md`](docs/guide/oml-content-map.md) | Map of OML layers: skills, references, scripts, templates, assets, registry, docs, and examples |
 | [`docs/guide/chat-guidance.md`](docs/guide/chat-guidance.md) | What the user should say, what the agent should ask, and how the interaction should feel |
 | [`docs/guide/abacus-librpa-g0w0-qsgw.md`](docs/guide/abacus-librpa-g0w0-qsgw.md) | Validated ABACUS -> PyATB -> LibRPA G0W0/QSGW route for Si and MgO |
 | [`examples/si-k444-gw/README.md`](examples/si-k444-gw/README.md) | A realistic periodic GW walkthrough with final output expectations |

@@ -23,4 +23,6 @@ matrix:
       - Keep ABACUS NSCF band path on symmetry=-1
       - Generate PyATB velocity/eigenvectors on the full MP grid in public x-fast order
       - Keep use_shrink_abfs synchronized with ABACUS shrink artifacts
-      - Write qsgw_band0_unoccupied_keep/cut_mode/cut_shift explicitly
+      - Distinguish exact full-BZ paper G0W0 reproduction from production symmetry QSGW
+      - Write qsgw_band0_unoccupied_keep/cut_mode/cut_shift/update_hartree explicitly
+      - For refreshed QSGW, regenerate PyATB/head-wing inputs from the previous HR export before the next LibRPA restart
