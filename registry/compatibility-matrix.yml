@@ -8,3 +8,19 @@ matrix:
     constraints:
       - Inputs must come from one workflow chain
       - Run directory must be isolated and newly created
+  - stack: abacus+pyatb+librpa
+    status: validated
+    notes: dongfang Si public-style G0W0/QSGW and MgO paper-strict G0W0 reference as of 2026-05-20.
+    versions:
+      abacus:
+        - "f0a1e171160d023e07c342870b0a8ad82039ca41"
+      librpa:
+        - "8476213f66c68efb43404713eacbd04966820f26"
+      pyatb:
+        - "bhjia private merge label 19661b4; get_velocity_matrix returns three values"
+    constraints:
+      - Use ABACUS SCF symmetry=1 for QSGW head-wing refresh sidecars
+      - Keep ABACUS NSCF band path on symmetry=-1
+      - Generate PyATB velocity/eigenvectors on the full MP grid in public x-fast order
+      - Keep use_shrink_abfs synchronized with ABACUS shrink artifacts
+      - Write qsgw_band0_unoccupied_keep/cut_mode/cut_shift explicitly

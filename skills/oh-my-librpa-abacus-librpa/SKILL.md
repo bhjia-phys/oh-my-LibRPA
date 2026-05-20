@@ -32,6 +32,10 @@ Treat this skill as the ABACUS-side router below the top-level `oh-my-librpa` en
 - `RPA` -> follow `skills/abacus-librpa-rpa/`
 - `Debug` or user-provided failure logs -> follow `skills/abacus-librpa-debug/`
 
+For periodic-solid `g0w0_band`, `qsgw_band0`, shrink, symmetry, or head-wing
+requests, make sure the GW route also loads
+`skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md`.
+
 ## Intake Rules
 
 Treat these as ABACUS markers:

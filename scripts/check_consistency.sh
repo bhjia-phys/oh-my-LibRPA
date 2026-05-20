@@ -81,6 +81,206 @@ has_active_key() {
   grep -qiE "^[[:space:]]*${key}([[:space:]=]|$)" "$file"
 }
 
+case_has_matching_files() {
+  local root="$1"
+  local pattern="$2"
+  find "$root" -maxdepth 1 -type f -name "$pattern" | grep -q .
+}
+
+extract_stru_section_entries() {
+  local file="$1"
+  local section="$2"
+  awk -v section="$section" '
+    function trim_text(s) {
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      return s
+    }
+    {
+      line = $0
+      sub(/#.*/, "", line)
+      sub(/\/\/.*/, "", line)
+      line = trim_text(line)
+      if (capture) {
+        if (line == "") {
+          exit
+        }
+        if (line ~ /^[A-Z][A-Z0-9_]*$/) {
+          exit
+        }
+        print line
+      } else if (line == section) {
+        capture = 1
+      }
+    }
+  ' "$file"
+}
+
+resolve_case_path() {
+  local root="$1"
+  local entry="$2"
+  if [[ "$entry" = /* ]]; then
+    printf '%s\n' "$entry"
+  else
+    printf '%s\n' "$root/$entry"
+  fi
+}
+
+extract_header_value() {
+  local file="$1"
+  local prefix="$2"
+  awk -v prefix="$prefix" '
+    function trim_text(s) {
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      return s
+    }
+    {
+      line = trim_text($0)
+      if (index(line, prefix) == 1) {
+        value = line
+        sub("^" prefix "[ \t]*", "", value)
+        print trim_text(value)
+        exit
+      }
+    }
+  ' "$file"
+}
+
+extract_header_count() {
+  local file="$1"
+  local label="$2"
+  awk -v label="$label" '
+    function trim_text(s) {
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      return s
+    }
+    {
+      line = trim_text($0)
+      if (line ~ ("^Number of " label "(-->)?")) {
+        print $NF
+        exit
+      }
+    }
+  ' "$file"
+}
+
+float_equal() {
+  local left="$1"
+  local right="$2"
+  local tol="${3:-1e-6}"
+  awk -v left="$left" -v right="$right" -v tol="$tol" '
+    BEGIN {
+      diff = left - right
+      if (diff < 0) {
+        diff = -diff
+      }
+      exit !(diff <= tol)
+    }
+  '
+}
+
+validate_abfs_assets() {
+  local stru_file="$1"
+  local root_dir="$2"
+
+  local -a species_order=()
+  local -a orb_entries=()
+  local -a abfs_entries=()
+  local idx=0
+
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    species_order+=("$line")
+  done < <(extract_stru_section_entries "$stru_file" "ATOMIC_SPECIES" | awk '{ print $1 }')
+
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    orb_entries+=("$line")
+  done < <(extract_stru_section_entries "$stru_file" "NUMERICAL_ORBITAL")
+
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    abfs_entries+=("$line")
+  done < <(extract_stru_section_entries "$stru_file" "ABFS_ORBITAL")
+
+  if [[ "${#species_order[@]}" -eq 0 ]]; then
+    note_fail "Could not parse ATOMIC_SPECIES from STRU while validating ABFS assets"
+    return
+  fi
+
+  if [[ "${#orb_entries[@]}" -ne "${#species_order[@]}" ]]; then
+    note_fail "NUMERICAL_ORBITAL count (${#orb_entries[@]}) does not match ATOMIC_SPECIES count (${#species_order[@]})"
+    return
+  fi
+
+  if [[ "${#abfs_entries[@]}" -ne "${#species_order[@]}" ]]; then
+    note_fail "ABFS_ORBITAL count (${#abfs_entries[@]}) does not match ATOMIC_SPECIES count (${#species_order[@]})"
+    return
+  fi
+
+  for idx in "${!species_order[@]}"; do
+    local species="${species_order[$idx]}"
+    local orb_path
+    local abfs_path
+    local orb_element
+    local abfs_element
+    local orb_radius
+    local abfs_radius
+    local orb_f
+    local abfs_f
+    local abfs_g
+
+    orb_path="$(resolve_case_path "$root_dir" "${orb_entries[$idx]}")"
+    abfs_path="$(resolve_case_path "$root_dir" "${abfs_entries[$idx]}")"
+
+    if [[ ! -f "$orb_path" ]]; then
+      note_fail "Missing NUMERICAL_ORBITAL file for $species: $orb_path"
+      continue
+    fi
+    if [[ ! -f "$abfs_path" ]]; then
+      note_fail "Missing ABFS_ORBITAL file for $species: $abfs_path"
+      continue
+    fi
+
+    orb_element="$(extract_header_value "$orb_path" "Element" || true)"
+    abfs_element="$(extract_header_value "$abfs_path" "Element" || true)"
+    if [[ -n "$orb_element" && "$orb_element" != "$species" ]]; then
+      note_fail "NUMERICAL_ORBITAL element mismatch for $species: header says $orb_element in $(basename "$orb_path")"
+    fi
+    if [[ -n "$abfs_element" && "$abfs_element" != "$species" ]]; then
+      note_fail "ABFS_ORBITAL element mismatch for $species: header says $abfs_element in $(basename "$abfs_path")"
+    fi
+
+    orb_radius="$(extract_header_value "$orb_path" "Radius Cutoff(a.u.)" || true)"
+    abfs_radius="$(extract_header_value "$abfs_path" "Radius Cutoff(a.u.)" || true)"
+    if [[ -n "$orb_radius" && -n "$abfs_radius" ]]; then
+      if float_equal "$orb_radius" "$abfs_radius" 1e-6; then
+        note_pass "ABFS radius matches NUMERICAL_ORBITAL for $species: $abfs_radius a.u."
+      else
+        note_fail "ABFS radius mismatch for $species: orb=$orb_radius a.u. abfs=$abfs_radius a.u."
+      fi
+    else
+      note_warn "Could not read both orbital radii for $species while validating ABFS assets"
+    fi
+
+    orb_f="$(extract_header_count "$orb_path" "Forbital" || true)"
+    abfs_f="$(extract_header_count "$abfs_path" "Forbital" || true)"
+    abfs_g="$(extract_header_count "$abfs_path" "Gorbital" || true)"
+    if [[ "$orb_f" =~ ^[0-9]+$ ]] && (( orb_f > 0 )); then
+      if [[ "$abfs_f" =~ ^[0-9]+$ ]] && (( abfs_f > 0 )); then
+        note_pass "ABFS keeps nonzero f channel for $species"
+      else
+        note_fail "ABFS is missing a nonzero f channel for $species even though the paired orbital contains f"
+      fi
+
+      if [[ "$abfs_g" =~ ^[0-9]+$ ]] && (( abfs_g > 0 )); then
+        note_pass "ABFS keeps nonzero g channel for $species"
+      else
+        note_fail "ABFS is missing a nonzero g channel for $species even though the paired orbital contains f"
+      fi
+    fi
+  done
+}
+
 case_dir=""
 mode="auto"
 system_type="auto"
@@ -120,6 +320,7 @@ stru="$case_dir/STRU"
 kpt="$case_dir/KPT"
 kpt_scf="$case_dir/KPT_scf"
 kpt_nscf="$case_dir/KPT_nscf"
+input_main="$case_dir/INPUT"
 
 pass_count=0
 warn_count=0
@@ -138,7 +339,7 @@ task_value="$(lower "$(trim "$(get_value "$librpa" "task" || true)")")"
 resolved_mode="$mode"
 if [[ "$resolved_mode" == "auto" ]]; then
   case "$task_value" in
-    g0w0_band) resolved_mode="gw" ;;
+    g0w0_band|qsgw_band0|qsgw_band|qsgw|qsgwa) resolved_mode="gw" ;;
     rpa) resolved_mode="rpa" ;;
     *) resolved_mode="unknown" ;;
   esac
@@ -159,7 +360,7 @@ fi
 echo "INFO: mode=$resolved_mode system_type=$resolved_system_type"
 
 if [[ "$resolved_mode" == "gw" ]]; then
-  for input_file in "$scf" "$nscf"; do
+  for input_file in "$scf" "$nscf" "$input_main"; do
     [[ -f "$input_file" ]] || continue
 
     if has_key_value "$input_file" "latname" "user_defined_lattice"; then
@@ -176,6 +377,14 @@ if [[ "$resolved_mode" == "gw" ]]; then
       note_fail "$(basename "$input_file") still contains deprecated key cs_inv_thr; use exx_cs_inv_thr"
     fi
 
+    if grep -qiE '^[[:space:]]*exx_spencer_type([[:space:]=]|$)' "$input_file"; then
+      note_fail "$(basename "$input_file") still contains deprecated key exx_spencer_type"
+    fi
+
+    if grep -qiE '^[[:space:]]*out_bandgap([[:space:]=]|$)' "$input_file"; then
+      note_fail "$(basename "$input_file") still contains invalid key out_bandgap"
+    fi
+
     if has_key_value "$input_file" "rpa" "1"; then
       if has_key_value "$input_file" "exx_singularity_correction" "massidda"; then
         note_pass "$(basename "$input_file") keeps exx_singularity_correction = massidda for rpa 1"
@@ -186,11 +395,21 @@ if [[ "$resolved_mode" == "gw" ]]; then
   done
 
   helper_get_diel="$case_dir/get_diel.py"
+  helper_output_librpa="$case_dir/output_librpa.py"
+  helper_perform="$case_dir/perform.sh"
   if [[ -f "$helper_get_diel" ]]; then
     if grep -q "E_FERMI" "$helper_get_diel" && grep -q "EFERMI" "$helper_get_diel"; then
       note_pass "get_diel.py accepts both E_FERMI and legacy EFERMI"
     else
       note_fail "get_diel.py should accept both E_FERMI and legacy EFERMI for the merged ABACUS branch"
+    fi
+  fi
+
+  if [[ -f "$helper_get_diel" || -f "$helper_perform" ]]; then
+    if [[ -f "$helper_output_librpa" ]]; then
+      note_pass "GW helper quartet includes output_librpa.py"
+    else
+      note_fail "GW periodic helper bundle is incomplete: get_diel.py/perform.sh requires output_librpa.py in the same case directory"
     fi
   fi
 
@@ -206,7 +425,14 @@ fi
 
 case "$resolved_mode" in
   gw)
-    [[ "$task_value" == "g0w0_band" ]] || note_fail "GW route expects 'task = g0w0_band' in librpa.in"
+    case "$task_value" in
+      g0w0_band|qsgw_band0|qsgw_band|qsgw|qsgwa)
+        note_pass "GW-family task accepted in librpa.in: $task_value"
+        ;;
+      *)
+        note_fail "GW route expects task = g0w0_band, qsgw_band0, qsgw_band, qsgw, or qsgwa in librpa.in"
+        ;;
+    esac
     ;;
   rpa)
     [[ "$task_value" == "rpa" ]] || note_fail "RPA route expects 'task = rpa' in librpa.in"
@@ -224,6 +450,15 @@ fi
 if [[ "$needs_periodic_gw_route" -eq 1 ]]; then
   [[ -f "$nscf" ]] || note_fail "GW periodic route requires INPUT_nscf"
   [[ -f "$kpt_nscf" ]] || note_fail "GW periodic route requires KPT_nscf"
+  if [[ -f "$nscf" ]]; then
+    for key in out_mat_xc out_mat_hs out_mat_hs2; do
+      if has_key_value "$nscf" "$key" "1"; then
+        note_pass "periodic GW/QSGW NSCF keeps $key = 1"
+      else
+        note_fail "periodic GW/QSGW NSCF requires $key = 1"
+      fi
+    done
+  fi
 else
   [[ -f "$nscf" ]] || note_warn "INPUT_nscf not present; this is fine for RPA and molecular GW routes"
 fi
@@ -248,12 +483,90 @@ else
 fi
 
 nfreq="$(trim "$(get_value "$librpa" "nfreq" || true)")"
+tfgrid_type="$(trim "$(get_value "$librpa" "tfgrid_type" || true)")"
+if [[ -z "$tfgrid_type" ]]; then
+  tfgrid_type="minimax"
+fi
 if [[ -z "$nfreq" ]]; then
   note_warn "nfreq not found in librpa.in"
+elif [[ "$tfgrid_type" == "minimax" ]] && [[ "$nfreq" =~ ^[0-9]+$ ]] && (( nfreq < 6 )); then
+  note_fail "tfgrid_type=minimax requires nfreq>=6 in LibRPA; nfreq=$nfreq is only acceptable with an explicit non-minimax grid such as evenspaced_tf"
 elif [[ "$nfreq" == "16" ]]; then
   note_pass "nfreq=16 smoke default"
 else
   note_warn "nfreq=$nfreq (recommended smoke default: 16)"
+fi
+
+if [[ "$resolved_mode" == "gw" && "$task_value" == "qsgw_band0" ]]; then
+  max_iter_value="$(trim "$(get_value "$librpa" "max_iter" || true)")"
+  if [[ -n "$max_iter_value" ]]; then
+    note_pass "qsgw_band0 defines max_iter: $max_iter_value"
+  else
+    note_fail "qsgw_band0 requires explicit max_iter"
+  fi
+
+  if has_key_value "$librpa" "qsgw_checkpoint_every" "1"; then
+    note_pass "qsgw_band0 writes a checkpoint every iteration"
+  else
+    note_fail "qsgw_band0 requires qsgw_checkpoint_every = 1 for resumable iteration"
+  fi
+
+  if has_key_value "$librpa" "qsgw_export_hamiltonian_for_pyatb" "t"; then
+    note_pass "qsgw_band0 exports H0_GW for PyATB refresh"
+  else
+    note_fail "qsgw_band0 requires qsgw_export_hamiltonian_for_pyatb = t"
+  fi
+
+  if has_key_value "$librpa" "qsgw_hr_export_full_mp_rgrid" "t"; then
+    note_pass "qsgw_band0 exports full MP-grid HR for refresh workflows"
+  else
+    note_warn "qsgw_hr_export_full_mp_rgrid is not t; head-wing refresh workflows should enable it"
+  fi
+
+  qsgw_keep="$(trim "$(get_value "$librpa" "qsgw_band0_unoccupied_keep" || true)")"
+  qsgw_cut_mode="$(trim "$(get_value "$librpa" "qsgw_band0_cut_mode" || true)")"
+  qsgw_cut_shift="$(trim "$(get_value "$librpa" "qsgw_band0_cut_shift_ha" || true)")"
+
+  if [[ -z "$qsgw_keep" ]]; then
+    note_fail "qsgw_band0 requires explicit qsgw_band0_unoccupied_keep; default validated Si workflow uses 10"
+  elif [[ "$qsgw_keep" == "10" ]]; then
+    note_pass "qsgw_band0_unoccupied_keep = 10 keeps all occupied states plus 10 unoccupied states"
+  else
+    note_warn "qsgw_band0_unoccupied_keep=$qsgw_keep; record this as a deliberate convergence/sweep axis"
+  fi
+
+  if [[ -z "$qsgw_cut_mode" ]]; then
+    note_fail "qsgw_band0 requires explicit qsgw_band0_cut_mode; default validated Si workflow uses 2"
+  elif [[ "$qsgw_cut_mode" == "2" ]]; then
+    note_pass "qsgw_band0_cut_mode = 2"
+  else
+    note_warn "qsgw_band0_cut_mode=$qsgw_cut_mode differs from the validated default 2"
+  fi
+
+  if [[ -z "$qsgw_cut_shift" ]]; then
+    note_fail "qsgw_band0 requires explicit qsgw_band0_cut_shift_ha; default validated Si workflow uses 20.0"
+  elif float_equal "$qsgw_cut_shift" "20.0" 1e-12; then
+    note_pass "qsgw_band0_cut_shift_ha = 20.0"
+  else
+    note_warn "qsgw_band0_cut_shift_ha=$qsgw_cut_shift differs from the validated default 20.0 Ha"
+  fi
+
+  replace_w_head_value="$(trim "$(get_value "$librpa" "replace_w_head" || true)")"
+  option_dielect_value="$(trim "$(get_value "$librpa" "option_dielect_func" || true)")"
+  if [[ "$replace_w_head_value" == "t" ]]; then
+    case "$option_dielect_value" in
+      3|4) note_pass "qsgw_band0 head-wing option is explicit: option_dielect_func=$option_dielect_value" ;;
+      *) note_fail "replace_w_head=t in qsgw_band0 requires option_dielect_func = 3 or 4 for the validated head/head-wing lanes" ;;
+    esac
+  fi
+
+  if has_key_value "$librpa" "qsgw_restart" "t"; then
+    if has_active_key "$librpa" "qsgw_restart_dir" && has_active_key "$librpa" "qsgw_restart_iteration"; then
+      note_pass "qsgw restart defines restart_dir and restart_iteration"
+    else
+      note_fail "qsgw_restart=t requires qsgw_restart_dir and qsgw_restart_iteration"
+    fi
+  fi
 fi
 
 if grep -qiE '^use_shrink_abfs[[:space:]]*=[[:space:]]*t([[:space:]]|$)' "$librpa"; then
@@ -275,11 +588,20 @@ if grep -qiE '^use_shrink_abfs[[:space:]]*=[[:space:]]*t([[:space:]]|$)' "$librp
   if [[ -f "$stru" ]]; then
     if grep -qiE '^[[:space:]]*ABFS_ORBITAL([[:space:]]|$)' "$stru"; then
       note_pass "STRU contains ABFS_ORBITAL for shrink route"
+      validate_abfs_assets "$stru" "$case_dir"
     else
       note_fail "use_shrink_abfs=t but STRU is missing ABFS_ORBITAL"
     fi
   else
     note_warn "STRU not found; could not verify ABFS_ORBITAL for shrink route"
+  fi
+
+  if has_active_key "$scf" "shrink_abfs_pca_thr" || has_active_key "$scf" "shrink_lu_inv_thr" \
+     || case_has_matching_files "$case_dir" 'shrink_sinvS_*' \
+     || case_has_matching_files "$case_dir" 'Cs_shrinked_data_*'; then
+    note_pass "ABACUS-side bundle shows shrink markers/artifacts consistent with use_shrink_abfs=t"
+  else
+    note_fail "use_shrink_abfs=t but the bundle does not show shrink markers/artifacts from ABACUS"
   fi
 elif grep -qiE '^use_shrink_abfs[[:space:]]*=[[:space:]]*f([[:space:]]|$)' "$librpa"; then
   if has_active_key "$scf" "shrink_abfs_pca_thr"; then
@@ -292,6 +614,13 @@ elif grep -qiE '^use_shrink_abfs[[:space:]]*=[[:space:]]*f([[:space:]]|$)' "$lib
     note_fail "use_shrink_abfs=f but INPUT_scf still contains shrink_lu_inv_thr"
   else
     note_pass "no-shrink lane keeps shrink_lu_inv_thr out of INPUT_scf"
+  fi
+
+  if case_has_matching_files "$case_dir" 'shrink_sinvS_*' \
+     || case_has_matching_files "$case_dir" 'Cs_shrinked_data_*'; then
+    note_fail "use_shrink_abfs=f but the bundle still contains shrink artifacts (shrink_sinvS_* or Cs_shrinked_data_*)"
+  else
+    note_pass "no-shrink lane does not carry shrink artifacts from ABACUS"
   fi
 
   if [[ -f "$stru" ]] && grep -qiE '^[[:space:]]*ABFS_ORBITAL([[:space:]]|$)' "$stru"; then

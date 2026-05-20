@@ -69,3 +69,23 @@
     - Confirm `librpa.in` enables both EXX and GW symmetry flags
   applies_to:
     mode: gw
+
+- id: qsgw-band0-cut-provenance-005
+  scene: periodic ABACUS + PyATB + LibRPA qsgw_band0 workflow
+  symptom: later iterations cannot be interpreted or reproduced because the high-band cut policy is implicit
+  root_cause: qsgw_band0 has code defaults for active unoccupied bands and high-energy-state treatment, but benchmark runs need these parameters written explicitly
+  fix:
+    - Set `qsgw_band0_unoccupied_keep = 10`
+    - Set `qsgw_band0_cut_mode = 2`
+    - Set `qsgw_band0_cut_shift_ha = 20.0`
+    - Set `qsgw_checkpoint_every = 1`
+    - Set `qsgw_export_hamiltonian_for_pyatb = t`
+    - Set `qsgw_hr_export_full_mp_rgrid = t` when refreshing PyATB/head-wing between iterations
+  verify:
+    - Confirm all occupied states are below the Fermi level and therefore included
+    - Confirm the first 10 unoccupied states are included in the active H0_GW block
+    - Confirm checkpoints exist under `librpa.d/qsgw_checkpoints/`
+    - Confirm exported HR files exist before attempting a PyATB/head-wing refresh
+  applies_to:
+    mode: gw
+    task: qsgw_band0

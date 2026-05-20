@@ -32,17 +32,20 @@ Regression exception: if the user asks to run, update, or design LibRPA regressi
 9. Create a fresh isolated run directory before any real run.
 10. If the case needs PP/NAO/ABFS assets and the user did not provide a complete bundle, read `references/pp-nao-abfs-library.md` and select files from the bundled asset library.
 11. If the user explicitly asks to regenerate ABFS, or if the bundled library does not contain the requested PP family / radius / orbital tier, also read `references/abfs-generation.md` and generate a matched auxiliary basis instead of substituting an approximate one.
-12. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
+12. For periodic-solid `ABACUS -> PyATB -> LibRPA` `g0w0_band`,
+    `qsgw_band0`, symmetry, shrink, or head-wing work, first read
+    `references/abacus-g0w0-qsgw-workflow.md`.
+13. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
    - `references/gw-route.md`
    - `references/rpa-route.md`
    - `references/debug-route.md`
-12. If the ABACUS case uses the user's merged local ABACUS checkout or helper scripts copied from local Downloads, also read `references/abacus-merge-compat.md`.
-13. If server execution is chosen, also read `references/server-profiles.md` before submission.
-14. For `ABACUS -> LibRPA`, before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
-15. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
-16. When the user asks to plot periodic GW/EXX bands or compare occupied manifolds, load `rules/cards/periodic-gw-plotting.yml` before choosing any sorting or plotting logic.
-17. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
-18. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
+14. If the ABACUS case uses the user's merged local ABACUS checkout or helper scripts copied from local Downloads, also read `references/abacus-merge-compat.md`.
+15. If server execution is chosen, also read `references/server-profiles.md` before submission.
+16. For `ABACUS -> LibRPA`, before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
+17. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
+18. When the user asks to plot periodic GW/EXX bands or compare occupied manifolds, load `rules/cards/periodic-gw-plotting.yml` before choosing any sorting or plotting logic.
+19. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
+20. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
 
 If the route is still ambiguous, ask the smallest possible clarification set.
 
@@ -67,6 +70,7 @@ Use these intake rules:
 - `structure files` -> generate or complete the workflow
 - `input bundle` -> audit and patch; do not rewrite blindly
 - `input bundle` that is clearly ABACUS-based -> hand off to `skills/oh-my-librpa-abacus-librpa/`
+- `ABACUS` periodic-solid `g0w0_band` / `qsgw_band0` / head-wing requests -> load `references/abacus-g0w0-qsgw-workflow.md` before patching inputs or scripts
 - `fhi-aims strong markers` with explicit periodic-solid `g0w0_band` intent and no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-g0w0-band/`
 - `fhi-aims strong markers` with no conflicting ABACUS markers -> route to `skills/oh-my-librpa-fhi-aims-qsgw/`
 - `fhi-aims supporting markers` alone do not override ABACUS routing; ask only if ownership is still unclear after checking for strong markers

@@ -20,6 +20,8 @@
     ·
     <a href="examples/si-k444-gw/README.md"><strong>Si GW example</strong></a>
     ·
+    <a href="docs/guide/abacus-librpa-g0w0-qsgw.md"><strong>ABACUS G0W0/QSGW</strong></a>
+    ·
     <a href="#what-you-get"><strong>What you get</strong></a>
   </p>
 </div>
@@ -125,6 +127,7 @@ For Windows + Git Bash agent updates, see:
 - **molecular GW** short route
 - **periodic GW** full route
 - **periodic GW symmetry** lane with ABACUS sidecars staged for LibRPA
+- **periodic ABACUS G0W0/QSGW** route for public-style Si and paper-strict MgO benchmarks
 - **RPA** split from GW-only preprocessing
 - **FHI-aims + LibRPA QSGW/G0W0** supplement for case mirroring and staged campaigns
 - spin / SOC consistency checks across helper scripts and `librpa.in`
@@ -154,6 +157,7 @@ For Windows + Git Bash agent updates, see:
 Molecule GW:      SCF -> LibRPA
 Periodic GW:      SCF -> pyatb -> NSCF -> preprocess -> LibRPA
 Periodic GW sym:  SCF(symmetry=1,rpa=1,no SOC) -> copy sidecars -> pyatb -> NSCF(symmetry=-1) -> preprocess -> LibRPA(symmetry flags)
+Periodic QSGW:    G0W0-style source bundle -> qsgw_band0 -> checkpoint/export H0_GW -> optional PyATB/head-wing refresh -> next qsgw_band0 restart
 RPA:              SCF -> LibRPA
 ```
 
@@ -171,6 +175,7 @@ If you only open three pages, open these:
 | --- | --- |
 | [`docs/guide/installation.md`](docs/guide/installation.md) | Full install flow for agents and humans |
 | [`docs/guide/chat-guidance.md`](docs/guide/chat-guidance.md) | What the user should say, what the agent should ask, and how the interaction should feel |
+| [`docs/guide/abacus-librpa-g0w0-qsgw.md`](docs/guide/abacus-librpa-g0w0-qsgw.md) | Validated ABACUS -> PyATB -> LibRPA G0W0/QSGW route for Si and MgO |
 | [`examples/si-k444-gw/README.md`](examples/si-k444-gw/README.md) | A realistic periodic GW walkthrough with final output expectations |
 
 Useful supporting material:

@@ -25,28 +25,39 @@ def get_omega(filename : str = 'LibRPA_freq.out'):
 
 def get_param(work_dir : str = './'):
     '''
-    get lattice_vector from STRU,
+    get lattice_vector from STRU in Angstrom for pyatb,
     get fermi_energy(eV) from running_scf.log,
     get occ_band from band_out.
     '''
     import os
+    import numpy as np
     f_stru = os.path.join(work_dir, 'STRU')
     f_running = os.path.join(work_dir, "OUT.ABACUS/running_scf.log")
     f_band = os.path.join(work_dir, 'band_out')
 
+    bohr_to_angstrom = 0.529177210903
+    lattice_constant = None
     lattice_vector = []
     with open(f_stru, 'r') as file:
         lines = file.readlines()
-        # 找到 "LATTICE_VECTORS" 行
-        start_index = 0
+        for i, line in enumerate(lines):
+            if line.strip() == "LATTICE_CONSTANT" and i + 1 < len(lines):
+                lattice_constant = float(lines[i + 1].split()[0])
+                break
+        if lattice_constant is None:
+            raise ValueError(f"Failed to find LATTICE_CONSTANT in {f_stru}")
+
+        start_index = None
         for i, line in enumerate(lines):
             if line.strip() == "LATTICE_VECTORS":
-                start_index = i + 1  # "LATTICE_VECTORS" 行的下一行是第一个向量
+                start_index = i + 1
                 break
-        # 读取接下来的三行作为 LATTICE_VECTORS
+        if start_index is None:
+            raise ValueError(f"Failed to find LATTICE_VECTORS in {f_stru}")
         for i in range(start_index, start_index + 3):
             vector = list(map(float, lines[i].split()))
             lattice_vector.append(vector)
+    lattice_vector = (np.array(lattice_vector, dtype=float) * lattice_constant * bohr_to_angstrom).tolist()
 
     fermi_energy = None
     with open(f_running, 'r') as file:

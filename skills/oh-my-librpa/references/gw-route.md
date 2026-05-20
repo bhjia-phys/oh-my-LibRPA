@@ -2,6 +2,10 @@
 
 Use this reference after `oh-my-librpa` has already classified the task as GW.
 
+For periodic-solid `g0w0_band`, `qsgw_band0`, shrink, symmetry, or head-wing
+work, load `abacus-g0w0-qsgw-workflow.md` before editing inputs. That file is
+the strict Si/MgO public-style benchmark route.
+
 ## Route selection
 
 Choose the workflow by system type:
@@ -49,6 +53,21 @@ Set or verify these `librpa.in` defaults unless a stronger empirical rule overri
 - `libri_g0w0_threshold_C = 1e-5`
 - `libri_g0w0_threshold_G = 1e-5`
 - `libri_g0w0_threshold_Wc = 1e-6`
+
+For QSGW band work, `qsgw_band0` is still a GW-family task. Keep the same
+head-wing/shrink/symmetry defaults and add:
+
+- `task = qsgw_band0`
+- `max_iter = 10`
+- `qsgw_checkpoint_every = 1`
+- `qsgw_export_hamiltonian_for_pyatb = t`
+- `qsgw_hr_export_full_mp_rgrid = t`
+- `qsgw_band0_unoccupied_keep = 10`
+- `qsgw_band0_cut_mode = 2`
+- `qsgw_band0_cut_shift_ha = 20.0`
+
+The QSGW Hamiltonian cut must be written into `librpa.in` for reproducibility.
+Do not rely on code defaults when preparing a production or benchmark case.
 
 Only flip `output_gw_sigc_mat_rf` to `t` when the user explicitly asks to open NSCF band continuation.
 When materializing a fresh GW case for that request, pass `--enable-nscf-band-continuation true`.
@@ -132,6 +151,8 @@ Use the full periodic route.
 Required checks and stages:
 
 - ask how many k-points to use in `KPT`; default to `8 8 8`
+- for benchmark Si/MgO G0W0/QSGW work, use the exact settings in
+  `abacus-g0w0-qsgw-workflow.md`
 - require explicit `KPT_nscf`
 - prefer the updated `get_diel.py` and `preprocess_abacus_for_librpa_band.py` copies that match the merged ABACUS branch; do not fall back to stale helpers that assume only legacy `EFERMI` parsing or one fixed wavefunction filename pattern
 - treat the periodic GW helper quartet as inseparable: `perform.sh`, `get_diel.py`, `output_librpa.py`, and `preprocess_abacus_for_librpa_band.py`

@@ -339,7 +339,7 @@ task_value="$(lower "$(trim "$(get_value "$librpa" "task" || true)")")"
 resolved_mode="$mode"
 if [[ "$resolved_mode" == "auto" ]]; then
   case "$task_value" in
-    g0w0_band) resolved_mode="gw" ;;
+    g0w0_band|qsgw_band0|qsgw_band|qsgw|qsgwa) resolved_mode="gw" ;;
     rpa) resolved_mode="rpa" ;;
     *) resolved_mode="unknown" ;;
   esac
@@ -425,7 +425,14 @@ fi
 
 case "$resolved_mode" in
   gw)
-    [[ "$task_value" == "g0w0_band" ]] || note_fail "GW route expects 'task = g0w0_band' in librpa.in"
+    case "$task_value" in
+      g0w0_band|qsgw_band0|qsgw_band|qsgw|qsgwa)
+        note_pass "GW-family task accepted in librpa.in: $task_value"
+        ;;
+      *)
+        note_fail "GW route expects task = g0w0_band, qsgw_band0, qsgw_band, qsgw, or qsgwa in librpa.in"
+        ;;
+    esac
     ;;
   rpa)
     [[ "$task_value" == "rpa" ]] || note_fail "RPA route expects 'task = rpa' in librpa.in"
@@ -443,6 +450,15 @@ fi
 if [[ "$needs_periodic_gw_route" -eq 1 ]]; then
   [[ -f "$nscf" ]] || note_fail "GW periodic route requires INPUT_nscf"
   [[ -f "$kpt_nscf" ]] || note_fail "GW periodic route requires KPT_nscf"
+  if [[ -f "$nscf" ]]; then
+    for key in out_mat_xc out_mat_hs out_mat_hs2; do
+      if has_key_value "$nscf" "$key" "1"; then
+        note_pass "periodic GW/QSGW NSCF keeps $key = 1"
+      else
+        note_fail "periodic GW/QSGW NSCF requires $key = 1"
+      fi
+    done
+  fi
 else
   [[ -f "$nscf" ]] || note_warn "INPUT_nscf not present; this is fine for RPA and molecular GW routes"
 fi
@@ -479,6 +495,78 @@ elif [[ "$nfreq" == "16" ]]; then
   note_pass "nfreq=16 smoke default"
 else
   note_warn "nfreq=$nfreq (recommended smoke default: 16)"
+fi
+
+if [[ "$resolved_mode" == "gw" && "$task_value" == "qsgw_band0" ]]; then
+  max_iter_value="$(trim "$(get_value "$librpa" "max_iter" || true)")"
+  if [[ -n "$max_iter_value" ]]; then
+    note_pass "qsgw_band0 defines max_iter: $max_iter_value"
+  else
+    note_fail "qsgw_band0 requires explicit max_iter"
+  fi
+
+  if has_key_value "$librpa" "qsgw_checkpoint_every" "1"; then
+    note_pass "qsgw_band0 writes a checkpoint every iteration"
+  else
+    note_fail "qsgw_band0 requires qsgw_checkpoint_every = 1 for resumable iteration"
+  fi
+
+  if has_key_value "$librpa" "qsgw_export_hamiltonian_for_pyatb" "t"; then
+    note_pass "qsgw_band0 exports H0_GW for PyATB refresh"
+  else
+    note_fail "qsgw_band0 requires qsgw_export_hamiltonian_for_pyatb = t"
+  fi
+
+  if has_key_value "$librpa" "qsgw_hr_export_full_mp_rgrid" "t"; then
+    note_pass "qsgw_band0 exports full MP-grid HR for refresh workflows"
+  else
+    note_warn "qsgw_hr_export_full_mp_rgrid is not t; head-wing refresh workflows should enable it"
+  fi
+
+  qsgw_keep="$(trim "$(get_value "$librpa" "qsgw_band0_unoccupied_keep" || true)")"
+  qsgw_cut_mode="$(trim "$(get_value "$librpa" "qsgw_band0_cut_mode" || true)")"
+  qsgw_cut_shift="$(trim "$(get_value "$librpa" "qsgw_band0_cut_shift_ha" || true)")"
+
+  if [[ -z "$qsgw_keep" ]]; then
+    note_fail "qsgw_band0 requires explicit qsgw_band0_unoccupied_keep; default validated Si workflow uses 10"
+  elif [[ "$qsgw_keep" == "10" ]]; then
+    note_pass "qsgw_band0_unoccupied_keep = 10 keeps all occupied states plus 10 unoccupied states"
+  else
+    note_warn "qsgw_band0_unoccupied_keep=$qsgw_keep; record this as a deliberate convergence/sweep axis"
+  fi
+
+  if [[ -z "$qsgw_cut_mode" ]]; then
+    note_fail "qsgw_band0 requires explicit qsgw_band0_cut_mode; default validated Si workflow uses 2"
+  elif [[ "$qsgw_cut_mode" == "2" ]]; then
+    note_pass "qsgw_band0_cut_mode = 2"
+  else
+    note_warn "qsgw_band0_cut_mode=$qsgw_cut_mode differs from the validated default 2"
+  fi
+
+  if [[ -z "$qsgw_cut_shift" ]]; then
+    note_fail "qsgw_band0 requires explicit qsgw_band0_cut_shift_ha; default validated Si workflow uses 20.0"
+  elif float_equal "$qsgw_cut_shift" "20.0" 1e-12; then
+    note_pass "qsgw_band0_cut_shift_ha = 20.0"
+  else
+    note_warn "qsgw_band0_cut_shift_ha=$qsgw_cut_shift differs from the validated default 20.0 Ha"
+  fi
+
+  replace_w_head_value="$(trim "$(get_value "$librpa" "replace_w_head" || true)")"
+  option_dielect_value="$(trim "$(get_value "$librpa" "option_dielect_func" || true)")"
+  if [[ "$replace_w_head_value" == "t" ]]; then
+    case "$option_dielect_value" in
+      3|4) note_pass "qsgw_band0 head-wing option is explicit: option_dielect_func=$option_dielect_value" ;;
+      *) note_fail "replace_w_head=t in qsgw_band0 requires option_dielect_func = 3 or 4 for the validated head/head-wing lanes" ;;
+    esac
+  fi
+
+  if has_key_value "$librpa" "qsgw_restart" "t"; then
+    if has_active_key "$librpa" "qsgw_restart_dir" && has_active_key "$librpa" "qsgw_restart_iteration"; then
+      note_pass "qsgw restart defines restart_dir and restart_iteration"
+    else
+      note_fail "qsgw_restart=t requires qsgw_restart_dir and qsgw_restart_iteration"
+    fi
+  fi
 fi
 
 if grep -qiE '^use_shrink_abfs[[:space:]]*=[[:space:]]*t([[:space:]]|$)' "$librpa"; then

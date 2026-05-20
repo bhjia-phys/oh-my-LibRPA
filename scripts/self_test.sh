@@ -65,8 +65,11 @@ for path in \
   "$installed_root/rules/cards/periodic-gw-plotting.yml" \
   "$installed_root/rules/cards/server-profile-runtime.yml" \
   "$installed_root/registry/host-profiles/generic-hpc-example.env" \
+  "$installed_root/docs/guide/abacus-librpa-g0w0-qsgw.md" \
   "$installed_root/docs/guide/fhi-aims-librpa-qsgw.md" \
+  "$workspace/skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \
+  "$installed_root/templates/abacus-librpa-gw/template/librpa.qsgw_band0.in" \
   "$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py" \
   "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/INPUT_scf.template" \
   "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/librpa.in.template" \
@@ -200,6 +203,57 @@ if "$installed_root/scripts/intake_preflight.sh" "$case_rpa" --mode rpa --system
   pass 'intake_preflight.sh produced a summary on a minimal RPA case'
 else
   fail 'intake_preflight.sh failed on a minimal RPA case'
+fi
+
+case_qsgw="$tmp_dir/qsgw-case"
+mkdir -p "$case_qsgw"
+cat <<'EOF' > "$case_qsgw/INPUT_scf"
+nbands 16
+EOF
+cat <<'EOF' > "$case_qsgw/INPUT_nscf"
+nbands 16
+out_mat_xc 1
+out_mat_hs 1
+out_mat_hs2 1
+EOF
+cat <<'EOF' > "$case_qsgw/KPT_scf"
+K_POINTS
+0
+Gamma
+4 4 4 0 0 0
+EOF
+cat <<'EOF' > "$case_qsgw/KPT_nscf"
+K_POINTS
+2
+Line
+0.000 0.000 0.000 1
+0.500 0.000 0.500 1
+EOF
+cat <<'EOF' > "$case_qsgw/librpa.in"
+task = qsgw_band0
+nfreq = 16
+use_shrink_abfs = f
+replace_w_head = t
+option_dielect_func = 3
+max_iter = 10
+qsgw_checkpoint_every = 1
+qsgw_export_hamiltonian_for_pyatb = t
+qsgw_hr_export_full_mp_rgrid = t
+qsgw_band0_unoccupied_keep = 10
+qsgw_band0_cut_mode = 2
+qsgw_band0_cut_shift_ha = 20.0
+EOF
+
+if "$installed_root/scripts/check_consistency.sh" "$case_qsgw" --mode gw --system-type solid >/dev/null 2>&1; then
+  pass 'check_consistency.sh accepts qsgw_band0 as a GW-family task with explicit cut settings'
+else
+  fail 'check_consistency.sh rejected a valid qsgw_band0 GW-family case'
+fi
+
+if "$installed_root/scripts/intake_preflight.sh" "$case_qsgw" --mode auto --system-type solid >/dev/null 2>&1; then
+  pass 'intake_preflight.sh infers qsgw_band0 as a GW-family task'
+else
+  fail 'intake_preflight.sh did not infer qsgw_band0 as a GW-family task'
 fi
 
 case_resource="$tmp_dir/resource-case"

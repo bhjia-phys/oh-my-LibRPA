@@ -100,7 +100,7 @@ The `Gap (eV)` column records the band gap associated with the tested setup.
 | GaAs | 1.378 | Ga: `dojo_3`, As: `dojo` |
 | GaN | 2.857 | Ga: `dojo`, N: `dojo` |
 | GaP | 2.245 | Ga: `dojo_2`, P: `dojo` |
-| MgO | 7.392 | Mg: `sg15`, O: `sg15_10au` |
+| MgO | 7.192 | Mg: `sg15_8au`, O: `sg15_8au` |
 | NaCl | 7.832 | Na: `sg15`, Cl: `sg15` |
 | CdS | 2.076 | Cd: `dojo`, S: `dojo` |
 | CaO | 6.368 | Ca: `sg15`, O: `sg15_8au` |
@@ -120,6 +120,19 @@ In other words, this repository is both:
 
 - a **tested-material lookup table**, and
 - an **element-indexed resource library**.
+
+MgO note: the current primary MgO benchmark is the paper-strict user-provided
+8au bundle:
+
+- `Mg/sg15_8au/Mg_ONCV_PBE-1.0.upf`
+- `Mg/sg15_8au/Mg_gga_8au_100Ry_6s3p2d.orb`
+- `Mg/sg15_8au/Mg_6s3p2d1f1g_pca1e-6.abfs`
+- `O/sg15_8au/O_ONCV_PBE-1.0.upf`
+- `O/sg15_8au/O_gga_8au_100Ry_3s3p2d.orb`
+- `O/sg15_8au/O_3s3p2d1f1g_pca1e-6.abfs`
+
+This setup reproduced the paper-dataset G0W0 gap `7.1921781 eV` to
+`8.0e-7 eV` on 2026-05-20.
 
 ---
 

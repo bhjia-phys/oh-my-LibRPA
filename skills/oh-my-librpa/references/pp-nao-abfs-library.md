@@ -29,6 +29,19 @@ Choose assets in this order:
 9. If SOC is enabled, SOC pseudopotentials are mandatory. Do not run a SOC case with non-SOC pseudopotentials.
 10. If the user explicitly requests a specific PP family, orbital cutoff, or orbital tier and the bundled library does not already contain that exact matched set, switch to `references/abfs-generation.md` instead of substituting an approximate library match.
 
+For MgO, the current primary paper-strict benchmark uses the 8au SG15 bundle
+from the user-provided dataset:
+
+- Mg: `Mg/sg15_8au/Mg_ONCV_PBE-1.0.upf`,
+  `Mg/sg15_8au/Mg_gga_8au_100Ry_6s3p2d.orb`,
+  `Mg/sg15_8au/Mg_6s3p2d1f1g_pca1e-6.abfs`
+- O: `O/sg15_8au/O_ONCV_PBE-1.0.upf`,
+  `O/sg15_8au/O_gga_8au_100Ry_3s3p2d.orb`,
+  `O/sg15_8au/O_3s3p2d1f1g_pca1e-6.abfs`
+
+Do not substitute the older Mg 10au or O 10au MgO setup when the user asks to
+reproduce the paper-strict MgO G0W0/QSGW workflow.
+
 ## What to pull from the library
 
 For each element, identify one corresponding set:

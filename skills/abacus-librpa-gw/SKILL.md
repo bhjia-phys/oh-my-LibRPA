@@ -1,6 +1,6 @@
 ---
 name: abacus-librpa-gw
-description: ABACUS + LibRPA GW workflow guidance and static input checks. Use when planning, preparing, or validating GW runs, including SCF/DF/NSCF chaining, librpa.in consistency, and safe run-directory setup.
+description: ABACUS + PyATB + LibRPA GW/QSGW workflow guidance and static input checks. Use when planning, preparing, or validating G0W0/QSGW runs, including SCF/PyATB/NSCF chaining, head-wing handling, librpa.in consistency, and safe run-directory setup.
 ---
 
 # ABACUS + LibRPA GW
@@ -9,6 +9,10 @@ Execution order depends on system type:
 
 - `molecule`: default to the short route `SCF -> LibRPA` unless the user explicitly needs extra band preparation; skip `pyatb`
 - `solid`: `SCF -> DF (pyatb_librpa_df) -> NSCF -> preprocess_abacus_for_librpa_band.py -> LibRPA`
+
+For periodic-solid `g0w0_band`, `qsgw_band0`, symmetry, shrink, or head-wing
+work, also load `skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md`
+and treat it as the stricter route contract.
 
 If the case uses a locally merged ABACUS checkout or locally patched helper scripts, also apply `references/abacus-merge-compat.md`.
 
@@ -66,6 +70,22 @@ For GW requests, set:
 - `libri_g0w0_threshold_G = 1e-5`
 - `libri_g0w0_threshold_Wc = 1e-6`
 
+For QSGW band workflows, use `task = qsgw_band0` and keep the same GW
+head-wing/shrink/symmetry defaults unless a validated reference bundle says
+otherwise. Add these QSGW-specific keys explicitly:
+
+- `max_iter = 10`
+- `qsgw_checkpoint_every = 1`
+- `qsgw_export_hamiltonian_for_pyatb = t`
+- `qsgw_hr_export_full_mp_rgrid = t`
+- `qsgw_band0_unoccupied_keep = 10`
+- `qsgw_band0_cut_mode = 2`
+- `qsgw_band0_cut_shift_ha = 20.0`
+
+For restart, add `qsgw_restart = t`, `qsgw_restart_dir =
+librpa.d/qsgw_checkpoints/`, and `qsgw_restart_iteration = <last completed>`.
+Do not rely on implicit QSGW Hamiltonian-cut defaults in reproducibility runs.
+
 ## NBANDS Counting Rule
 
 Use the `.orb` filenames to determine basis count:
@@ -122,6 +142,8 @@ Use the following alignment for spin-sensitive GW workflows:
 ### Solid
 
 - Ask the user how many k-points to use in `KPT`; default to `8 8 8`
+- For Si/MgO benchmark reproduction, prefer the validated public-style
+  workflow in `skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md`
 - Only enable `output_gw_sigc_mat_rf = t` when the user explicitly asks to open NSCF band continuation; for a materialized case, pass `--enable-nscf-band-continuation true`
 - `KPT_nscf` must be provided by the user
 - Materialize `env.sh` from a host profile before batch submission so `python3_exec`, `abacus_work`, `librpa_work`, and the MPI launcher are explicit
@@ -137,6 +159,7 @@ Use the following alignment for spin-sensitive GW workflows:
 
 - When `replace_w_head = t`, do not generate `pyatb_librpa_df` from IBZ k-points or star weights, even if `symrot_k.txt` exists
 - For this lane, `pyatb_librpa_df` must stay on the full regular k-grid
+- The validated public route uses `mp_generator`, `kpoints_in_different_process`, and the PyATB `get_velocity_matrix()` API returning three values; do not replace it with an unvalidated manual full-BZ ordering
 - Keep root `band_out`, `k_path_info`, `velocity_matrix`, and `KS_eigenvector_*.dat` consistent with the symmetry-sidecar view used by LibRPA
 - Never overwrite those root files with the full-BZ `pyatb_librpa_df/*` copies unless the user explicitly asks for a root-level replacement and understands the symmetry mismatch risk
 
