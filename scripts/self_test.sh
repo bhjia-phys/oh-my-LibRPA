@@ -66,13 +66,17 @@ for path in \
   "$installed_root/rules/cards/server-profile-runtime.yml" \
   "$installed_root/registry/host-profiles/generic-hpc-example.env" \
   "$installed_root/docs/guide/abacus-librpa-g0w0-qsgw.md" \
+  "$installed_root/docs/guide/abacus-g0w0-qsgw-golden-runbook.md" \
   "$installed_root/docs/guide/oml-content-map.md" \
   "$installed_root/docs/guide/fhi-aims-librpa-qsgw.md" \
   "$workspace/skills/oh-my-librpa/references/oml-content-map.md" \
   "$workspace/skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md" \
+  "$workspace/skills/oh-my-librpa/references/abacus-g0w0-qsgw-golden-runbook.md" \
   "$workspace/skills/oh-my-librpa/references/paper-dataset-material-workflow.md" \
   "$installed_root/templates/abacus-librpa-gw/minimal/INPUT_scf.template" \
   "$installed_root/templates/abacus-librpa-gw/template/librpa.qsgw_band0.in" \
+  "$installed_root/templates/abacus-librpa-gw/template/run_qsgw_headwing_refresh_loop.sh" \
+  "$workspace/skills/oh-my-librpa/templates/abacus-librpa-gw/template/run_qsgw_headwing_refresh_loop.sh" \
   "$installed_root/templates/abacus-librpa-gw/template/plot_gw_band_paper.py" \
   "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/INPUT_scf.template" \
   "$installed_root/templates/abacus-librpa-gw/routes/molecule-gw-no-nscf-no-pyatb-no-shrink/librpa.in.template" \
@@ -127,6 +131,7 @@ for script in \
   "$installed_root/scripts/run_rpa_workflow.sh" \
   "$installed_root/scripts/self_test.sh" \
   "$installed_root/scripts/trim_abfs_channels.py" \
+  "$installed_root/templates/abacus-librpa-gw/template/run_qsgw_headwing_refresh_loop.sh" \
   "$installed_root/scripts/workflow_common.sh"; do
   if [[ -f "$script" ]]; then
     pass "Found script: $script"

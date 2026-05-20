@@ -46,6 +46,7 @@ copies together.
 | Periodic G0W0 | Solid GW band structure | `skills/oh-my-librpa/references/gw-route.md` |
 | Periodic symmetry GW | Solid GW with ABACUS symmetry sidecars | `skills/oh-my-librpa/references/gw-route.md` |
 | ABACUS G0W0/QSGW | Si/MgO/public-style ABACUS -> PyATB -> LibRPA workflow | `skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md` |
+| ABACUS G0W0/QSGW golden runbook | Step-by-step execution from source bundle to G0W0/QSGW report | `docs/guide/abacus-g0w0-qsgw-golden-runbook.md` and `skills/oh-my-librpa/references/abacus-g0w0-qsgw-golden-runbook.md` |
 | Paper dataset materials | User-provided `paper_dataset_GW_pseudopotential+NAO.zip` materials | `skills/oh-my-librpa/references/paper-dataset-material-workflow.md` |
 | RPA | Correlation-energy or response workflow | `skills/oh-my-librpa/references/rpa-route.md` |
 | Debug | Existing logs, failures, mismatched outputs | `skills/oh-my-librpa/references/debug-route.md` |
@@ -64,6 +65,8 @@ For the validated ABACUS -> PyATB -> LibRPA QSGW route:
   `qsgw_band0_cut_shift_ha`, and `qsgw_band0_update_hartree` must be explicit.
 - Head-wing-refresh QSGW should run one outer iteration at a time:
   checkpoint -> HR export -> PyATB/head-wing refresh -> LibRPA restart.
+- The reusable continuation skeleton is
+  `templates/abacus-librpa-gw/template/run_qsgw_headwing_refresh_loop.sh`.
 - Occupied bands must be inferred from the current material, not hard-coded
   from Si.
 

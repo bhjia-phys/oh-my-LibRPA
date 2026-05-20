@@ -10,6 +10,10 @@ or the user asks for all paper benchmark materials, also load
 directories to this stricter stage order and records which entries are
 complete source bundles versus result-only references.
 
+When the task is to execute or continue the workflow, also load
+`abacus-g0w0-qsgw-golden-runbook.md`. It turns this reference into a concrete
+step-by-step runbook and points to the refreshed-QSGW continuation template.
+
 ## Provenance Snapshot
 
 Use these versions as the currently validated dongfang reference, recorded on
@@ -203,6 +207,11 @@ without refreshing PyATB data. Run one outer iteration at a time:
 4. Stop when the log reports `Converged after N iterations`, or when the
    campaign cap is reached. Use 20 iterations as the current conservative cap
    for MgO-style convergence tests unless the user asks for a different limit.
+
+Use `templates/abacus-librpa-gw/template/run_qsgw_headwing_refresh_loop.sh`
+as the generic continuation skeleton. It still requires a material-specific
+`qsgw_refresh_headwing_cmd` because HR -> PyATB refresh commands can differ by
+host and helper-script layout.
 
 The checkpoint binaries and the HR exports have different roles:
 

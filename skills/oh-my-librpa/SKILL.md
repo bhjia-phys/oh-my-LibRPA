@@ -37,17 +37,18 @@ Regression exception: if the user asks to run, update, or design LibRPA regressi
 16. For periodic-solid `ABACUS -> PyATB -> LibRPA` `g0w0_band`,
     `qsgw_band0`, symmetry, shrink, or head-wing work, first read
     `references/abacus-g0w0-qsgw-workflow.md`.
-17. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
+17. If the user asks to execute, continue, audit, or make reproducible the periodic ABACUS G0W0/QSGW workflow, also read `references/abacus-g0w0-qsgw-golden-runbook.md`.
+18. For `ABACUS -> LibRPA`, route into the matching reference file and follow it strictly:
    - `references/gw-route.md`
    - `references/rpa-route.md`
    - `references/debug-route.md`
-18. If the ABACUS case uses the user's merged local ABACUS checkout or helper scripts copied from local Downloads, also read `references/abacus-merge-compat.md`.
-19. If server execution is chosen, also read `references/server-profiles.md` before submission.
-20. For `ABACUS -> LibRPA`, before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
-21. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
-22. When the user asks to plot periodic GW/EXX bands or compare occupied manifolds, load `rules/cards/periodic-gw-plotting.yml` before choosing any sorting or plotting logic.
-23. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
-24. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
+19. If the ABACUS case uses the user's merged local ABACUS checkout or helper scripts copied from local Downloads, also read `references/abacus-merge-compat.md`.
+20. If server execution is chosen, also read `references/server-profiles.md` before submission.
+21. For `ABACUS -> LibRPA`, before any real submission, run `scripts/intake_preflight.sh <case_dir> --mode <...> --system-type <...> --compute-location <...>` and block on any `FAIL` from the static checks.
+22. When route defaults, stage checks, or repair actions are still uncertain, load the most relevant cards under `rules/cards/` instead of inventing new workflow behavior.
+23. When the user asks to plot periodic GW/EXX bands or compare occupied manifolds, load `rules/cards/periodic-gw-plotting.yml` before choosing any sorting or plotting logic.
+24. Keep FHI-aims file conventions isolated from ABACUS `INPUT*` / `KPT*` / `STRU` conventions.
+25. If the user asks how to obtain, generate, select, validate, or document `ABFS_ORBITAL` / `.abfs` files, load `skills/abacus-librpa-abfs-orbital/`.
 
 If the route is still ambiguous, ask the smallest possible clarification set.
 

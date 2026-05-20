@@ -24,6 +24,8 @@
     ·
     <a href="docs/guide/abacus-librpa-g0w0-qsgw.md"><strong>ABACUS G0W0/QSGW</strong></a>
     ·
+    <a href="docs/guide/abacus-g0w0-qsgw-golden-runbook.md"><strong>Golden runbook</strong></a>
+    ·
     <a href="#what-you-get"><strong>What you get</strong></a>
   </p>
 </div>
@@ -186,6 +188,7 @@ If you only open a few pages, open these:
 | [`docs/guide/oml-content-map.md`](docs/guide/oml-content-map.md) | Map of OML layers: skills, references, scripts, templates, assets, registry, docs, and examples |
 | [`docs/guide/chat-guidance.md`](docs/guide/chat-guidance.md) | What the user should say, what the agent should ask, and how the interaction should feel |
 | [`docs/guide/abacus-librpa-g0w0-qsgw.md`](docs/guide/abacus-librpa-g0w0-qsgw.md) | Validated ABACUS -> PyATB -> LibRPA G0W0/QSGW route for Si and MgO |
+| [`docs/guide/abacus-g0w0-qsgw-golden-runbook.md`](docs/guide/abacus-g0w0-qsgw-golden-runbook.md) | Step-by-step operational runbook for new agents running G0W0 or QSGW |
 | [`examples/si-k444-gw/README.md`](examples/si-k444-gw/README.md) | A realistic periodic GW walkthrough with final output expectations |
 
 Useful supporting material:

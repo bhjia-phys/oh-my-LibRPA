@@ -40,6 +40,8 @@ relevant route reference.
 
 - ABACUS public-style G0W0/QSGW:
   `references/abacus-g0w0-qsgw-workflow.md`.
+- ABACUS public-style G0W0/QSGW execution:
+  `references/abacus-g0w0-qsgw-golden-runbook.md`.
 - Paper dataset material workflow:
   `references/paper-dataset-material-workflow.md`.
 - General ABACUS GW/RPA/debug:

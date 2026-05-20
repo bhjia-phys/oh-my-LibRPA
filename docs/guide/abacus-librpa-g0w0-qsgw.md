@@ -7,6 +7,10 @@ The executable workflow contract lives in:
 
 - `skills/oh-my-librpa/references/abacus-g0w0-qsgw-workflow.md`
 
+For a step-by-step execution checklist, use:
+
+- `docs/guide/abacus-g0w0-qsgw-golden-runbook.md`
+
 Use that reference when reproducing:
 
 - Si public-style `G0W0 -> qsgw_band0` with shrink, symmetry, and head-wing
@@ -69,6 +73,9 @@ MgO QSGW status as of 2026-05-20:
 - For refreshed QSGW, each next LibRPA call must restart from the previous
   checkpoint and regenerate PyATB/head-wing data from the previous
   `hrs*_nao_qsgw_iter_*.csr` HR export first.
+- Use `templates/abacus-librpa-gw/template/run_qsgw_headwing_refresh_loop.sh`
+  as the conservative continuation skeleton when running refreshed head-wing
+  QSGW campaigns.
 - Infer occupied bands from `band_out` or band occupations for each material.
   Accept both binary and weighted positive occupations; do not hard-code Si's
   occupied-band count in MgO or other materials.

@@ -165,6 +165,9 @@ For a refreshed head-wing campaign, use one LibRPA outer step per refresh:
 Checkpoint binaries and HR exports are not interchangeable. The checkpoint is
 the restart state; the HR export is the bridge back to PyATB.
 
+For execution, use `abacus-g0w0-qsgw-golden-runbook.md` and the template
+`templates/abacus-librpa-gw/template/run_qsgw_headwing_refresh_loop.sh`.
+
 The Hamiltonian cut is material independent in form but material dependent in
 `N0`: LibRPA counts occupied bands from the Fermi level. All occupied bands are
 kept, then the first `qsgw_band0_unoccupied_keep` unoccupied bands are kept.
